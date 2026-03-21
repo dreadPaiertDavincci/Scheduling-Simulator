@@ -1,7 +1,12 @@
 import React from 'react';
+import { useSimulation } from '../hooks/useSimulation';
 import './CalculationDetails.css';
 
 export default function CalculationDetails() {
+  const { result, processes, selectedAlgo } = useSimulation();
+
+  const stats = result?.processStats || [];
+
   return (
     <div className="card calculation-card" style={{ marginBottom: '40px' }}>
       <div className="vis-title" style={{ marginBottom: '40px' }}>
@@ -42,14 +47,25 @@ export default function CalculationDetails() {
          {/* Simulation Trace */}
          <div className="sim-trace">
            <div className="vis-col-title">SIMULATION TRACE (LOG)</div>
-           <div className="trace-box">
-             <div><span className="time-blue">[T=00]</span> Scheduler initialized with FCFS logic.</div>
-             <div><span className="time-blue">[T=00]</span> P1 enters Ready Queue. CPU assigned to P1.</div>
-             <div><span className="time-blue">[T=08]</span> P1 completes. Waiting Queue: P2, P3, P4.</div>
-             <div><span className="time-blue">[T=08]</span> P2 starts execution. (Waiting Time: 8 - 1 = 7ms)</div>
-             <div><span className="time-blue">[T=12]</span> P2 completes. CPU assigned to P3.</div>
-             <div><span className="time-blue">[T=21]</span> P3 completes. CPU assigned to P4.</div>
-             <div><span className="time-green">[T=26]</span> All processes finished. Calculating results...</div>
+           <div className="trace-box hide-scrollbar" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+             <div><span className="time-blue">[T=00]</span> Scheduler initialized with {selectedAlgo || 'None'} logic.</div>
+             {result?.steps.map((step, i) => {
+               const timeStr = `[T=${step.time.toString().padStart(2, '0')}]`;
+               if (step.type === 'running') {
+                 const prevStep = i > 0 ? result.steps[i-1] : null;
+                 if (!prevStep || prevStep.processId !== step.processId) {
+                   return <div key={i}><span className="time-blue">{timeStr}</span> CPU assigned to P{step.processId}. Remaining: {step.remainingBurst}ms.</div>;
+                 }
+               } else if (step.type === 'idle') {
+                 const prevStep = i > 0 ? result.steps[i-1] : null;
+                 if (!prevStep || prevStep.type !== 'idle') {
+                   return <div key={i}><span className="time-blue">{timeStr}</span> CPU entered IDLE state.</div>;
+                 }
+               }
+               return null;
+             })}
+             {result && <div style={{ marginTop: '8px' }}><span className="time-green">[T={(result.steps.length).toString().padStart(2, '0')}]</span> All processes finished. Calculating results...</div>}
+             {!result && <div><span className="time-blue">[T=--]</span> Awaiting simulation start...</div>}
            </div>
          </div>
       </div>
@@ -66,18 +82,20 @@ export default function CalculationDetails() {
               <div>Result (WT)</div>
             </div>
             
-            <div className="ct-row">
-              <div className="pid-1">P1</div> <div>8 - 0</div> <div>8 ms</div> <div>8 - 8</div> <div>0 ms</div>
-            </div>
-            <div className="ct-row">
-              <div className="pid-2">P2</div> <div>12 - 1</div> <div>11 ms</div> <div>11 - 4</div> <div>7 ms</div>
-            </div>
-            <div className="ct-row">
-              <div className="pid-3">P3</div> <div>21 - 2</div> <div>19 ms</div> <div>19 - 9</div> <div>10 ms</div>
-            </div>
-            <div className="ct-row">
-              <div className="pid-4">P4</div> <div>26 - 3</div> <div>23 ms</div> <div>23 - 5</div> <div>18 ms</div>
-            </div>
+            {stats.map(s => {
+              const p = processes.find(pp => pp.id === s.id);
+              if (!p) return null;
+              return (
+                <div className="ct-row" key={s.id}>
+                  <div className={`pid-${(processes.findIndex(pp => pp.id === s.id) % 4) + 1}`}>P{s.id}</div> 
+                  <div>{s.finishTime} - {p.arrival}</div> 
+                  <div>{s.turnaroundTime} ms</div> 
+                  <div>{s.turnaroundTime} - {p.burst}</div> 
+                  <div>{s.waitingTime} ms</div>
+                </div>
+              );
+            })}
+            {stats.length === 0 && <div style={{ padding: '20px', textAlign: 'center', color: '#94A3B8' }}>No calculation data.</div>}
          </div>
       </div>
     </div>

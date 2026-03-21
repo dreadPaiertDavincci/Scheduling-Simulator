@@ -1,7 +1,19 @@
 import React from 'react';
+import { useSimulation } from '../hooks/useSimulation';
 import './StatisticsPanel.css';
 
 export default function StatisticsPanel() {
+  const { result, processes } = useSimulation();
+
+  const stats = result?.processStats || [];
+  const avgWait = stats.length > 0 ? (stats.reduce((acc, s) => acc + s.waitingTime, 0) / stats.length).toFixed(2) : "0.00";
+  const avgTAT = stats.length > 0 ? (stats.reduce((acc, s) => acc + s.turnaroundTime, 0) / stats.length).toFixed(2) : "0.00";
+  const avgResp = stats.length > 0 ? (stats.reduce((acc, s) => acc + s.responseTime, 0) / stats.length).toFixed(2) : "0.00";
+  
+  const totalTime = result?.steps.length || 0;
+  const idleTime = result?.steps.filter(s => s.type === 'idle').length || 0;
+  const cpuUtil = totalTime > 0 ? (((totalTime - idleTime) / totalTime) * 100).toFixed(1) : "0.0";
+
   return (
     <div className="statistics-panel" style={{ marginTop: '32px', marginBottom: '40px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -12,18 +24,20 @@ export default function StatisticsPanel() {
             <div className="st-header">
               <div>PID</div><div>COMP.</div><div>WAIT.</div><div>T/A</div><div style={{textAlign:'right'}}>RESP.</div>
             </div>
-            <div className="st-row">
-              <div className="pid-1">P1</div><div>8</div><div>0</div><div>8</div><div className="pid-1" style={{textAlign:'right'}}>0</div>
-            </div>
-            <div className="st-row">
-              <div className="pid-2">P2</div><div>12</div><div>7</div><div>11</div><div className="pid-2" style={{textAlign:'right'}}>7</div>
-            </div>
-            <div className="st-row">
-              <div className="pid-3">P3</div><div>21</div><div>10</div><div>19</div><div className="pid-3" style={{textAlign:'right'}}>10</div>
-            </div>
-            <div className="st-row">
-              <div className="pid-4">P4</div><div>26</div><div>18</div><div>23</div><div className="pid-4" style={{textAlign:'right'}}>18</div>
-            </div>
+            {stats.map((s) => {
+               const pIdx = processes.findIndex(p => p.id === s.id);
+               const pidClass = `pid-${(pIdx % 4) + 1}`;
+               return (
+                <div className="st-row" key={s.id}>
+                  <div className={pidClass}>P{s.id}</div>
+                  <div>{s.finishTime}</div>
+                  <div>{s.waitingTime}</div>
+                  <div>{s.turnaroundTime}</div>
+                  <div className={pidClass} style={{textAlign:'right'}}>{s.responseTime}</div>
+                </div>
+               );
+            })}
+            {stats.length === 0 && <div style={{ padding: '20px', textAlign: 'center', color: '#94A3B8' }}>No data available. Run simulation first.</div>}
           </div>
         </div>
 
@@ -35,22 +49,22 @@ export default function StatisticsPanel() {
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                 <div className="stat-item" style={{ marginBottom: 0 }}>
-                  <div className="stat-val">7.25 <span>MS</span></div>
+                  <div className="stat-val">{avgWait} <span>MS</span></div>
                   <div className="stat-lbl">Avg Waiting Time</div>
                 </div>
                 
                 <div className="stat-item" style={{ marginBottom: 0 }}>
-                  <div className="stat-val">13.75 <span>MS</span></div>
+                  <div className="stat-val">{avgTAT} <span>MS</span></div>
                   <div className="stat-lbl">Avg Turnaround</div>
                 </div>
                 
                 <div className="stat-item" style={{ marginBottom: 0 }}>
-                  <div className="stat-val" style={{ color: '#10B981' }}>94.2 <span>%</span></div>
+                  <div className="stat-val" style={{ color: '#10B981' }}>{cpuUtil} <span>%</span></div>
                   <div className="stat-lbl">CPU Utilization</div>
                 </div>
                 
                 <div className="stat-item" style={{ marginBottom: 0 }}>
-                  <div className="stat-val">6.25 <span>MS</span></div>
+                  <div className="stat-val">{avgResp} <span>MS</span></div>
                   <div className="stat-lbl">Avg Response Time</div>
                 </div>
               </div>
@@ -62,7 +76,11 @@ export default function StatisticsPanel() {
                <div className="insight-icon">◆</div> PRECISION INSIGHT
              </div>
              <div className="insight-text">
-               Under current load, <strong style={{color: '#1E293B'}}>SJF</strong> would reduce waiting time by <span style={{color: '#3B82F6', fontWeight: 700}}>12%</span> compared to this model.
+               {stats.length > 0 ? (
+                 <>Simulation complete using <strong style={{color: '#1E293B'}}>{result?.steps[0].type === 'running' ? 'Scheduling' : 'Algorithm'}</strong>. Efficiency target achieved.</>
+               ) : (
+                 <>Add processes and select an algorithm to generate insights.</>
+               )}
              </div>
            </div>
         </div>
@@ -79,31 +97,28 @@ export default function StatisticsPanel() {
            {/* Waiting Time */}
            <div className="vis-col">
               <div className="vis-col-title">WAITING TIME PER PROCESS</div>
-              <BarRow label="P1" val="0ms" percent={0} color="#CBD5E1" />
-              <BarRow label="P2" val="7ms" percent={38} color="#CBD5E1" />
-              <BarRow label="P3" val="10ms" percent={55} color="#CBD5E1" />
-              <BarRow label="P4" val="18ms" percent={100} color="#CBD5E1" />
+              {stats.map(s => (
+                <BarRow key={s.id} label={`P${s.id}`} val={`${s.waitingTime}ms`} percent={Math.min(100, (s.waitingTime / (parseFloat(avgWait) * 2 || 1)) * 50)} color="#CBD5E1" />
+              ))}
            </div>
 
            {/* Turnaround Time */}
            <div className="vis-col">
               <div className="vis-col-title" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                AVERAGE TURNAROUND TIME
+                TURNAROUND TIME
                 <span style={{ color: '#1E3A8A' }}>● T/A</span>
               </div>
-              <BarRow label="P1" val="8ms" percent={34} color="#1E3A8A" />
-              <BarRow label="P2" val="11ms" percent={47} color="#1E3A8A" />
-              <BarRow label="P3" val="19ms" percent={82} color="#1E3A8A" />
-              <BarRow label="P4" val="23ms" percent={100} color="#1E3A8A" />
+              {stats.map(s => (
+                <BarRow key={s.id} label={`P${s.id}`} val={`${s.turnaroundTime}ms`} percent={Math.min(100, (s.turnaroundTime / (parseFloat(avgTAT) * 2 || 1)) * 50)} color="#1E3A8A" />
+              ))}
            </div>
 
            {/* Response Time */}
            <div className="vis-col">
               <div className="vis-col-title">RESPONSE TIME PER PROCESS</div>
-              <BarRow label="P1" val="0ms" percent={0} color="#3B82F6" />
-              <BarRow label="P2" val="7ms" percent={70} color="#3B82F6" />
-              <BarRow label="P3" val="8ms" percent={80} color="#3B82F6" />
-              <BarRow label="P4" val="10ms" percent={100} color="#3B82F6" />
+              {stats.map(s => (
+                <BarRow key={s.id} label={`P${s.id}`} val={`${s.responseTime}ms`} percent={Math.min(100, (s.responseTime / (parseFloat(avgResp) * 2 || 1)) * 50)} color="#3B82F6" />
+              ))}
            </div>
 
            {/* CPU Load */}
@@ -118,13 +133,13 @@ export default function StatisticsPanel() {
                    />
                    <path
                      className="circle"
-                     strokeDasharray="94.2, 100"
+                     strokeDasharray={`${cpuUtil}, 100`}
                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                      fill="none" stroke="#1E3A8A" strokeWidth="4"
                    />
                  </svg>
                  <div className="donut-text">
-                   <div className="dt-val">94.2%</div>
+                   <div className="dt-val">{cpuUtil}%</div>
                    <div className="dt-lbl">UTILIZED</div>
                  </div>
               </div>
