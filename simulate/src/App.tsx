@@ -1,7 +1,6 @@
 import Sidebar from './components/Sidebar';
 import { TimelineArea } from './components/TimelineArea';
 import StatisticsPanel from './components/StatisticsPanel';
-import CalculationDetails from './components/CalculationDetails';
 import { SimulationProvider } from './hooks/useSimulation';
 
 function App() {
@@ -24,9 +23,8 @@ function App() {
             <Sidebar />
             <TimelineArea />
           </div>
-          
+
           <StatisticsPanel />
-          <CalculationDetails />
         </div>
       </div>
     </SimulationProvider>

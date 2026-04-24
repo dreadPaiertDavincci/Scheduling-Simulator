@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { fcfs, sjf, srtf, roundRobin, priorityNonPreemptive, priorityPreemptive, hrrn, ljf, lrtf } from '../utils/algorithms';
+import { fcfs, sjf, srtf, roundRobin, priorityNonPreemptive, priorityPreemptive, hrrn, ljf, lrtf, priorityRR, spt, lpt, edd, muf, rms, dms, edl, tbs, drr } from '../utils/algorithms';
 import type { Process, SimulationStep, ProcessStats } from '../utils/algorithms';
 
 export type SimulationStatus = 'idle' | 'running' | 'paused' | 'finished';
@@ -71,6 +71,37 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         break;
       case "Longest Remaining Time First (LRTF)":
         res = lrtf(processes);
+        break;
+      // ── New algorithms ──────────────────────────────────────
+      case "Priority Round Robin (Priority RR)":
+        res = priorityRR(processes, quantum);
+        break;
+      case "Shortest Processing Time (SPT)":
+        res = spt(processes);
+        break;
+      case "Longest Processing Time (LPT)":
+        res = lpt(processes);
+        break;
+      case "Earliest Due Date (EDD)":
+        res = edd(processes);
+        break;
+      case "Maximum Urgency First (MUF)":
+        res = muf(processes);
+        break;
+      case "Rate Monotonic Scheduling (RMS)":
+        res = rms(processes);
+        break;
+      case "Deadline Monotonic Scheduling (DMS)":
+        res = dms(processes);
+        break;
+      case "Earliest Deadline Late (EDL)":
+        res = edl(processes);
+        break;
+      case "Total Bandwidth Server (TBS)":
+        res = tbs(processes);
+        break;
+      case "Deficit Round Robin (DRR)":
+        res = drr(processes, quantum);
         break;
       default:
         res = fcfs(processes); // Fallback

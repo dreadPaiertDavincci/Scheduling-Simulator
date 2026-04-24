@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useSimulation } from '../hooks/useSimulation';
 
 export function TimelineArea() {
-  const { 
-    processes, result, currentTime, 
-    currentStep, readyQueue, eventLog 
+  const {
+    processes, result, currentTime,
+    currentStep, readyQueue, eventLog
   } = useSimulation();
 
   const [tooltip, setTooltip] = useState<{ show: boolean; x: number; y: number; content: React.ReactNode }>({
@@ -58,9 +58,9 @@ export function TimelineArea() {
     if (steps.length === 0) return [];
 
     const groups: { processId?: number; duration: number; startTime: number; type: string }[] = [];
-    let currentGroup = { 
-      processId: steps[0].processId, 
-      duration: 1, 
+    let currentGroup = {
+      processId: steps[0].processId,
+      duration: 1,
       startTime: steps[0].time,
       type: steps[0].type
     };
@@ -70,9 +70,9 @@ export function TimelineArea() {
         currentGroup.duration++;
       } else {
         groups.push(currentGroup);
-        currentGroup = { 
-          processId: steps[i].processId, 
-          duration: 1, 
+        currentGroup = {
+          processId: steps[i].processId,
+          duration: 1,
           startTime: steps[i].time,
           type: steps[i].type
         };
@@ -169,27 +169,27 @@ export function TimelineArea() {
                   const stats = result?.processStats.find(s => s.id === p.id);
                   const isDone = stats ? stats.finishTime <= t : false;
                   const hasArrived = p.arrival <= t;
-                  
+
                   if (t >= currentTime) return <div key={t} className="empty-block" style={{ opacity: 0.2 }}></div>;
-                  
+
                   if (isRunning) {
                     return (
-                      <div 
-                        key={t} 
+                      <div
+                        key={t}
                         className={`time-block ${getProcessClass(p.id)}`}
-                        onMouseMove={(e) => handleMouseMove(e, `Process P${p.id}`, `Time: ${t}-${t+1}ms | RUNNING`)}
+                        onMouseMove={(e) => handleMouseMove(e, `Process P${p.id}`, `Time: ${t}-${t + 1}ms | RUNNING`)}
                         onMouseLeave={handleMouseLeave}
                       ></div>
                     );
                   }
-                  
+
                   if (hasArrived && !isDone) {
                     return (
-                      <div 
-                        key={t} 
-                        className="empty-block" 
+                      <div
+                        key={t}
+                        className="empty-block"
                         style={{ borderColor: getProcessColor(p.id) }}
-                        onMouseMove={(e) => handleMouseMove(e, `Process P${p.id}`, `Time: ${t}-${t+1}ms | READY`)}
+                        onMouseMove={(e) => handleMouseMove(e, `Process P${p.id}`, `Time: ${t}-${t + 1}ms | READY`)}
                         onMouseLeave={handleMouseLeave}
                       ></div>
                     );
@@ -212,11 +212,11 @@ export function TimelineArea() {
               <div
                 key={p.id}
                 className={`queue-item ${i === 0 ? 'next' : ''}`}
-                style={{ 
-                  minWidth: '56px', height: '56px', borderRadius: '12px', 
-                  border: i === 0 ? `2px solid ${getProcessColor(p.id)}` : '1px solid #E2E8F0', 
-                  color: getProcessColor(p.id), 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                style={{
+                  minWidth: '56px', height: '56px', borderRadius: '12px',
+                  border: i === 0 ? `2px solid ${getProcessColor(p.id)}` : '1px solid #E2E8F0',
+                  color: getProcessColor(p.id),
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '16px', fontWeight: 700, position: 'relative',
                   flexShrink: 0
                 }}
@@ -267,7 +267,7 @@ export function TimelineArea() {
             const time = log.match(/\[t=(\d+)\]/)?.[1];
             const pid = log.match(/P(\d+)/)?.[1];
             const content = log.replace(/\[t=\d+\]/, '').replace(/P\d+/, '');
-            
+
             return (
               <div className="log-line" key={i}>
                 <span className="time">[{time}ms]</span>

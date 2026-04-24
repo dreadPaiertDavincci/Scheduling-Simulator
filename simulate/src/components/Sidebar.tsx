@@ -2,14 +2,32 @@ import { useState, useEffect, useRef } from 'react';
 import { useSimulation } from '../hooks/useSimulation';
 
 const ALGORITHMS = [
+  // ── Core algorithms ──────────────────────────────────────────
   "First Come First Served (FCFS)",
   "Shortest Job First (SJF)",
+  "Shortest Processing Time (SPT)",
+  "Longest Job First (LJF)",
+  "Longest Processing Time (LPT)",
   "Shortest Remaining Time First (SRTF)",
+  "Longest Remaining Time First (LRTF)",
+  // ── Round Robin variants ──────────────────────────────────────
   "Round Robin (RR)",
+  "Priority Round Robin (Priority RR)",
+  "Deficit Round Robin (DRR)",
+  // ── Priority-based ──────────────────────────────────────────
   "Priority Scheduling",
   "Preemptive Priority Scheduling",
   "Non-Preemptive Priority Scheduling",
+  // ── Response ratio ──────────────────────────────────────────
   "Highest Response Ratio Next (HRRN)",
+  // ── Real-time algorithms ────────────────────────────────────
+  "Earliest Due Date (EDD)",
+  "Maximum Urgency First (MUF)",
+  "Rate Monotonic Scheduling (RMS)",
+  "Deadline Monotonic Scheduling (DMS)",
+  "Earliest Deadline Late (EDL)",
+  "Total Bandwidth Server (TBS)",
+  // ── Other / Advanced ────────────────────────────────────────
   "Multilevel Queue Scheduling",
   "Multilevel Feedback Queue (MLFQ)",
   "Completely Fair Scheduler (CFS)",
@@ -19,49 +37,7 @@ const ALGORITHMS = [
   "Proportional Share Scheduling",
   "Earliest Deadline First (EDF)",
   "Least Laxity First (LLF)",
-  "Maximum Urgency First (MUF)",
-  "Rate Monotonic Scheduling (RMS)",
-  "Deadline Monotonic Scheduling (DMS)",
-  "Earliest Deadline Late (EDL)",
-  "Total Bandwidth Server (TBS)",
-  "Constant Bandwidth Server (CBS)",
-  "Deferrable Server (DS)",
-  "Sporadic Server (SS)",
-  "Longest Job First (LJF)",
-  "Longest Remaining Time First (LRTF)",
-  "Shortest Processing Time (SPT)",
-  "Longest Processing Time (LPT)",
-  "Earliest Due Date (EDD)",
-  "Minimum Slack Time (MST)",
-  "Critical Ratio Scheduling (CR)",
-  "Moore’s Algorithm",
-  "Johnson’s Rule",
-  "Branch and Bound Scheduling",
-  "Dynamic Programming Scheduling",
-  "Greedy Scheduling",
-  "Genetic Algorithm Scheduling",
-  "Simulated Annealing Scheduling",
-  "Ant Colony Optimization Scheduling",
-  "Particle Swarm Optimization Scheduling",
-  "Tabu Search Scheduling",
-  "Hill Climbing Scheduling",
-  "Min-Min Scheduling",
-  "Max-Min Scheduling",
-  "Opportunistic Load Balancing (OLB)",
-  "Minimum Execution Time (MET)",
-  "Minimum Completion Time (MCT)",
-  "Heterogeneous Earliest Finish Time (HEFT)",
-  "Dynamic Level Scheduling (DLS)",
-  "Round Robin Load Balancing",
-  "Weighted Round Robin (WRR)",
-  "Work Stealing Scheduling",
-  "Work Sharing Scheduling",
-  "Gang Scheduling",
-  "Space Sharing Scheduling",
-  "Time Sharing Scheduling",
-  "Processor Sharing Scheduling",
   "Weighted Fair Queuing (WFQ)",
-  "Deficit Round Robin (DRR)",
   "Priority Queuing (PQ)",
   "Class-Based Queuing (CBQ)",
   "Hierarchical Fair Service Curve (HFSC)",
@@ -74,41 +50,37 @@ const ALGORITHMS = [
   "Virtual Clock Scheduling",
   "Frame-Based Scheduling",
   "Cyclic Executive Scheduling",
-  "Static Table Scheduling",
-  "Slack Stealing Scheduling",
-  "Imprecise Computation Scheduling",
-  "Feedback Scheduling",
-  "Aging Scheduling",
-  "Two-Level Scheduling",
-  "Cooperative Scheduling",
-  "Preemptive Scheduling",
-  "Non-Preemptive Scheduling",
-  "Batch Scheduling",
-  "Interactive Scheduling",
-  "Real-Time Scheduling",
-  "Hard Real-Time Scheduling",
-  "Soft Real-Time Scheduling",
-  "Best-Effort Scheduling",
-  "Adaptive Scheduling",
-  "Heuristic Scheduling",
-  "Metaheuristic Scheduling",
-  "Online Scheduling",
-  "Offline Scheduling",
-  "Deterministic Scheduling",
-  "Stochastic Scheduling",
-  "Centralized Scheduling",
-  "Distributed Scheduling",
-  "Decentralized Scheduling",
-  "Hierarchical Scheduling",
+  "Min-Min Scheduling",
+  "Max-Min Scheduling",
+  "Heterogeneous Earliest Finish Time (HEFT)",
+  "Dynamic Level Scheduling (DLS)",
+  "Round Robin Load Balancing",
+  "Weighted Round Robin (WRR)",
+  "Work Stealing Scheduling",
+  "Gang Scheduling",
+  "Minimum Slack Time (MST)",
+  "Critical Ratio Scheduling (CR)",
+  "Moore's Algorithm",
+  "Johnson's Rule",
+  "Branch and Bound Scheduling",
+  "Genetic Algorithm Scheduling",
+  "Simulated Annealing Scheduling",
+  "Ant Colony Optimization Scheduling",
+  "Particle Swarm Optimization Scheduling",
+  "Tabu Search Scheduling",
+  "Hill Climbing Scheduling",
+  "Opportunistic Load Balancing (OLB)",
+  "Minimum Execution Time (MET)",
+  "Minimum Completion Time (MCT)",
   "Hybrid Scheduling"
 ];
 
 export default function Sidebar() {
-  const { 
+  const {
     processes, setProcesses, currentProcesses,
     selectedAlgo, setSelectedAlgo,
     quantum, setQuantum,
-    status, runSimulation, play, pause, reset, stepForward, stepBackward 
+    status, runSimulation, play, pause, reset, stepForward, stepBackward
   } = useSimulation();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -133,7 +105,7 @@ export default function Sidebar() {
   };
 
   const handleRandom = () => {
-    const count = Math.floor(Math.random() * (10 - 3 + 1)) + 3; // 3 to 10 for better visualization
+    const count = Math.floor(Math.random() * (10 - 3 + 1)) + 3;
     const randomProcesses = Array.from({ length: count }).map((_, i) => ({
       id: i + 1,
       arrival: Math.floor(Math.random() * 10),
@@ -158,17 +130,17 @@ export default function Sidebar() {
       <div className="card">
         <h2 className="card-title">Selection Architecture</h2>
         <div className="select-wrapper" ref={dropdownRef} style={{ position: 'relative', width: '100%' }}>
-          <div 
-            className="custom-select-trigger" 
+          <div
+            className="custom-select-trigger"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            style={{ 
-              padding: '12px 16px', 
-              border: '1px solid #E2E8F0', 
-              borderRadius: '8px', 
-              cursor: 'pointer', 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
+            style={{
+              padding: '12px 16px',
+              border: '1px solid #E2E8F0',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
               backgroundColor: '#fff',
               fontSize: '14px',
               fontWeight: 500,
@@ -184,37 +156,37 @@ export default function Sidebar() {
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </div>
-          
+
           {isDropdownOpen && (
-            <div 
-              className="custom-select-dropdown hide-scrollbar" 
-              style={{ 
-                position: 'absolute', 
-                top: '100%', 
-                left: 0, 
-                right: 0, 
-                marginTop: '8px', 
-                backgroundColor: '#fff', 
-                border: '1px solid #E2E8F0', 
-                borderRadius: '8px', 
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', 
-                zIndex: 50, 
-                maxHeight: '280px', 
-                overflowY: 'auto' 
+            <div
+              className="custom-select-dropdown hide-scrollbar"
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                marginTop: '8px',
+                backgroundColor: '#fff',
+                border: '1px solid #E2E8F0',
+                borderRadius: '8px',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                zIndex: 50,
+                maxHeight: '280px',
+                overflowY: 'auto'
               }}
             >
               {ALGORITHMS.map(algo => (
-                <div 
-                  key={algo} 
+                <div
+                  key={algo}
                   onClick={() => { setSelectedAlgo(algo); setIsDropdownOpen(false); }}
-                  style={{ 
-                    padding: '12px 16px', 
-                    cursor: 'pointer', 
-                    backgroundColor: selectedAlgo === algo ? '#EFF6FF' : 'transparent', 
-                    color: selectedAlgo === algo ? '#2563EB' : '#1E293B', 
-                    fontSize: '14px', 
+                  style={{
+                    padding: '12px 16px',
+                    cursor: 'pointer',
+                    backgroundColor: selectedAlgo === algo ? '#EFF6FF' : 'transparent',
+                    color: selectedAlgo === algo ? '#2563EB' : '#1E293B',
+                    fontSize: '14px',
                     fontWeight: selectedAlgo === algo ? 600 : 400,
-                    transition: 'background-color 0.15s ease' 
+                    transition: 'background-color 0.15s ease'
                   }}
                   onMouseEnter={(e) => { if (selectedAlgo !== algo) e.currentTarget.style.backgroundColor = '#F8FAFC'; }}
                   onMouseLeave={(e) => { if (selectedAlgo !== algo) e.currentTarget.style.backgroundColor = 'transparent'; }}
@@ -226,110 +198,127 @@ export default function Sidebar() {
           )}
         </div>
         <p className="logic-desc" style={{ fontSize: '13px', color: '#64748B', lineHeight: '1.5' }}>
-          {selectedAlgo === "First Come First Served (FCFS)" && "Jobs are processed in the strict order they enter the ready queue. Simple, non-preemptive."}
-          {selectedAlgo === "Shortest Job First (SJF)" && "Non-preemptive algorithm that selects the waiting process with the smallest execution time."}
-          {selectedAlgo === "Shortest Remaining Time First (SRTF)" && "Preemptive version of SJF. The process with the smallest remaining time is executed next."}
-          {selectedAlgo === "Round Robin (RR)" && `Each process is assigned a fixed time unit (Quantum: ${quantum}ms) in a cyclic order.`}
-          {selectedAlgo.includes("Priority") && "Processes are scheduled based on priority (lower value = higher priority)."}
-          {selectedAlgo === "Highest Response Ratio Next (HRRN)" && "Non-preemptive. Prioritizes processes with higher (Wait + Burst) / Burst ratio to prevent starvation."}
-          {selectedAlgo === "Longest Job First (LJF)" && "Non-preemptive. Selects the process with the longest burst time first."}
-          {selectedAlgo === "Longest Remaining Time First (LRTF)" && "Preemptive. Always executes the process with the longest remaining time."}
-          {!selectedAlgo && "Select an algorithm to see its scheduling logic."}
+          {selectedAlgo === "First Come First Served (FCFS)" && "Jobs are processed in the order they enter the ready queue. Simple, non-preemptive."}
+          {selectedAlgo === "Shortest Job First (SJF)" && "Selects the waiting process with the smallest execution time."}
+          {selectedAlgo === "Shortest Processing Time (SPT)" && "Prioritizes processes with the shortest total processing requirement."}
+          {selectedAlgo === "Shortest Remaining Time First (SRTF)" && "Preemptive: executes the process with the smallest remaining time next."}
+          {selectedAlgo === "Longest Job First (LJF)" && "Selects the process with the longest burst time first."}
+          {selectedAlgo === "Longest Processing Time (LPT)" && "Prioritizes the most time-intensive jobs."}
+          {selectedAlgo === "Longest Remaining Time First (LRTF)" && "Always executes the process with the longest remaining time."}
+          {selectedAlgo === "Round Robin (RR)" && `Fixed time slice (Quantum: ${quantum}ms) per process in cyclic order.`}
+          {selectedAlgo === "Priority Round Robin (Priority RR)" && `RR within priority groups. Higher priority runs first.`}
+          {selectedAlgo === "Deficit Round Robin (DRR)" && `Uses a deficit counter to ensure fair bandwidth sharing.`}
+          {selectedAlgo === "Priority Scheduling" && "Lower priority value indicates higher scheduling priority."}
+          {selectedAlgo === "Preemptive Priority Scheduling" && "A higher-priority process immediately preempts the current one."}
+          {selectedAlgo === "Non-Preemptive Priority Scheduling" && "Priority is checked only when a process finishes or blocks."}
+          {selectedAlgo === "Highest Response Ratio Next (HRRN)" && "Balances wait time and burst time to prevent starvation."}
+          {!selectedAlgo && "Select an algorithm to view logic."}
         </p>
 
-        {selectedAlgo === "Round Robin (RR)" && (
+        {(selectedAlgo?.includes("Round Robin") || selectedAlgo === "Deficit Round Robin (DRR)") && (
           <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748B' }}>Time Quantum:</label>
-            <input 
-              type="number" 
-              min="1" 
-              value={quantum} 
+            <input
+              type="number"
+              min="1"
+              value={quantum}
               onChange={(e) => setQuantum(Math.max(1, parseInt(e.target.value) || 1))}
-              style={{ width: '60px', padding: '8px', border: '1px solid #E2E8F0', borderRadius: '6px', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}
+              style={{ width: '64px', padding: '8px', border: '1px solid #E2E8F0', borderRadius: '6px', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}
             />
           </div>
         )}
       </div>
 
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2 className="card-title" style={{ margin: 0 }}>Process Workload</h2>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button className="btn btn-primary btn-sm" onClick={handleAdd}>Add</button>
-            <button className="btn btn-soft btn-sm" onClick={handleRandom}>Random</button>
+            <button className="btn btn-primary btn-sm" onClick={handleAdd} style={{ padding: '6px 14px' }}>Add</button>
+            <button className="btn btn-soft btn-sm" onClick={handleRandom} style={{ padding: '6px 14px' }}>Random</button>
           </div>
         </div>
 
         <div className="process-table">
-          <div className="header-row" style={{ gridTemplateColumns: selectedAlgo.includes('Priority') ? '0.6fr 1.2fr 1.2fr 0.8fr 0.8fr 1.2fr 0.5fr' : '0.8fr 1.5fr 1.5fr 1fr 1.5fr 0.5fr', paddingRight: '8px' }}>
-            <div>PID</div>
-            <div>Arrival</div>
-            <div>Burst</div>
-            {selectedAlgo.includes('Priority') && <div>Pri</div>}
-            <div>Wait</div>
-            <div>Status</div>
+          <div className="header-row" style={{ 
+            display: 'grid',
+            gridTemplateColumns: selectedAlgo?.includes('Priority') ? '40px 1fr 1fr 45px 1fr 1.2fr 30px' : '45px 1.2fr 1.2fr 1fr 1.5fr 30px',
+            gap: '8px',
+            paddingRight: '8px',
+            borderBottom: '1px solid #F1F5F9',
+            paddingBottom: '8px'
+          }}>
+            <div style={{ textAlign: 'left' }}>PID</div>
+            <div style={{ textAlign: 'center' }}>Arrival</div>
+            <div style={{ textAlign: 'center' }}>Burst</div>
+            {selectedAlgo?.includes('Priority') && <div style={{ textAlign: 'center' }}>Pri</div>}
+            <div style={{ textAlign: 'center' }}>Wait</div>
+            <div style={{ textAlign: 'right', paddingRight: '4px' }}>Status</div>
             <div></div>
           </div>
-          <div className="process-list hide-scrollbar" style={{ maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
-            {currentProcesses.map((p: any, idx: number) => {
+          
+          <div className="process-list hide-scrollbar" style={{ maxHeight: '280px', overflowY: 'auto', paddingRight: '4px', marginTop: '8px' }}>
+            {currentProcesses.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '20px', color: '#94A3B8', fontSize: '13px' }}>
+                No processes added. Click Add or Random.
+              </div>
+            ) : currentProcesses.map((p: any, idx: number) => {
               const statusClass = `status-${(p.status || 'new').toLowerCase()}`;
               const colors = [
-                'var(--p1-color)', 'var(--p2-color)', 'var(--p3-color)', 'var(--p4-color)',
-                'var(--p5-color)', 'var(--p6-color)', 'var(--p7-color)', 'var(--p8-color)',
-                'var(--p9-color)', 'var(--p10-color)'
+                '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6',
+                '#EC4899', '#06B6D4', '#F97316', '#14B8A6',
+                '#6366F1', '#D946EF'
               ];
               const color = colors[idx % 10];
-              
+
               return (
-                <div className="process-row" key={p.id} style={{ gridTemplateColumns: selectedAlgo.includes('Priority') ? '0.6fr 1.2fr 1.2fr 0.8fr 0.8fr 1.2fr 0.5fr' : '0.8fr 1.5fr 1.5fr 1fr 1.5fr 0.5fr' }}>
+                <div className="process-row" key={p.id} style={{ 
+                  display: 'grid',
+                  gridTemplateColumns: selectedAlgo?.includes('Priority') ? '40px 1fr 1fr 45px 1fr 1.2fr 30px' : '45px 1.2fr 1.2fr 1fr 1.5fr 30px',
+                  gap: '8px',
+                  padding: '8px 0',
+                  alignItems: 'center'
+                }}>
                   <div style={{ color, fontWeight: 700 }}>P{p.id}</div>
-                  <div>
-                    <input 
-                      type="number" 
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <input
+                      type="number"
                       min="0"
-                      value={p.arrival} 
+                      value={p.arrival}
                       onChange={(e) => handleUpdate(p.id, 'arrival', Math.max(0, parseInt(e.target.value) || 0))}
-                      style={{ width: '42px', border: '1px solid transparent', backgroundColor: '#F1F5F9', borderRadius: '6px', padding: '4px 6px', fontSize: '13px', outline: 'none', transition: 'border 0.2s', cursor: 'text' }}
-                      onFocus={(e) => e.target.style.border = '1px solid #CBD5E1'}
-                      onBlur={(e) => e.target.style.border = '1px solid transparent'}
+                      style={{ width: '100%', maxWidth: '45px', border: '1px solid transparent', backgroundColor: '#F8FAFC', borderRadius: '6px', padding: '4px', fontSize: '13px', textAlign: 'center' }}
                     />
                   </div>
-                  <div>
-                    <input 
-                      type="number" 
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <input
+                      type="number"
                       min="1"
-                      value={p.burst} 
+                      value={p.burst}
                       onChange={(e) => handleUpdate(p.id, 'burst', Math.max(1, parseInt(e.target.value) || 1))}
-                      style={{ width: '42px', border: '1px solid transparent', backgroundColor: '#F1F5F9', borderRadius: '6px', padding: '4px 6px', fontSize: '13px', outline: 'none', transition: 'border 0.2s', cursor: 'text' }}
-                      onFocus={(e) => e.target.style.border = '1px solid #CBD5E1'}
-                      onBlur={(e) => e.target.style.border = '1px solid transparent'}
+                      style={{ width: '100%', maxWidth: '45px', border: '1px solid transparent', backgroundColor: '#F8FAFC', borderRadius: '6px', padding: '4px', fontSize: '13px', textAlign: 'center' }}
                     />
                   </div>
-                  {selectedAlgo.includes('Priority') && (
-                    <div>
-                      <input 
-                        type="number" 
+                  {selectedAlgo?.includes('Priority') && (
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <input
+                        type="number"
                         min="1"
-                        value={p.priority || 1} 
+                        value={p.priority || 1}
                         onChange={(e) => handleUpdate(p.id, 'priority', Math.max(1, parseInt(e.target.value) || 1))}
-                        style={{ width: '38px', border: '1px solid transparent', backgroundColor: '#F1F5F9', borderRadius: '6px', padding: '4px 6px', fontSize: '13px', outline: 'none', transition: 'border 0.2s', cursor: 'text', fontWeight: 700, color: '#334155' }}
-                        onFocus={(e) => e.target.style.border = '1px solid #CBD5E1'}
-                        onBlur={(e) => e.target.style.border = '1px solid transparent'}
+                        style={{ width: '100%', maxWidth: '38px', border: '1px solid transparent', backgroundColor: '#F8FAFC', borderRadius: '6px', padding: '4px', fontSize: '13px', textAlign: 'center', fontWeight: 700 }}
                       />
                     </div>
                   )}
-                  <div style={{ color: '#64748B', fontSize: '12px' }}>{(p.wait || 0)}ms</div>
-                  <div>
-                    <div className={`status-badge ${statusClass}`} style={{ padding: '2px 6px' }}>{p.status || 'NEW'}</div>
+                  <div style={{ color: '#64748B', fontSize: '12px', textAlign: 'center' }}>{(p.wait || 0)}ms</div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div className={`status-badge ${statusClass}`} style={{ padding: '2px 8px', fontSize: '9px', borderRadius: '4px' }}>{p.status || 'NEW'}</div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => handleDelete(p.id)}
-                    style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.2s' }}
+                    style={{ background: 'none', border: 'none', color: '#CBD5E1', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     onMouseEnter={(e) => e.currentTarget.style.color = '#EF4444'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#94A3B8'}
-                    title="Delete Process"
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#CBD5E1'}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2 2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2 2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
                 </div>
               );
@@ -337,30 +326,31 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <div className="playback-controls">
+        <div className="playback-controls" style={{ margin: '24px 0 16px', background: '#F8FAFC', padding: '10px', borderRadius: '12px' }}>
           <button className="play-btn" onClick={stepBackward}>
-             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
           </button>
-          <button className="play-btn" style={{border: '1px solid #CBD5E1', color: '#1E293B'}} onClick={status === 'running' ? pause : play}>
+          <button className="play-btn" style={{ background: '#fff', border: '1px solid #E2E8F0', width: '36px', height: '36px' }} onClick={status === 'running' ? pause : play}>
             {status === 'running' ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
             ) : (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             )}
           </button>
-          <button className="play-btn" style={{border: '1px solid #CBD5E1', color: '#1E293B'}} onClick={reset}>
-             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          <button className="play-btn" style={{ background: '#fff', border: '1px solid #E2E8F0', width: '36px', height: '36px' }} onClick={reset}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
           </button>
           <button className="play-btn" onClick={stepForward}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
           </button>
         </div>
 
-        <div className="action-buttons">
-          <button className="btn btn-primary" style={{flex: 1}} onClick={runSimulation}>Run Simulation</button>
-          <button className="btn btn-outline" style={{flex: 1}} onClick={reset}>Reset</button>
+        <div className="action-buttons" style={{ gap: '10px' }}>
+          <button className="btn btn-primary" style={{ flex: 1.5, height: '42px' }} onClick={runSimulation}>Run Simulation</button>
+          <button className="btn btn-outline" style={{ flex: 1, height: '42px' }} onClick={reset}>Reset</button>
         </div>
       </div>
     </aside>
   );
 }
+
