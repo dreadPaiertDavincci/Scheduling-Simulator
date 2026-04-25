@@ -5,9 +5,10 @@ import StatisticsPanel from './components/StatisticsPanel';
 import Navbar from './components/Navbar';
 import DataStructures from './components/DataStructures';
 import ArrayVisualizer from './components/ArrayVisualizer';
+import LinkedListVisualizer from './components/LinkedListVisualizer';
 import { SimulationProvider } from './hooks/useSimulation';
 
-export type ViewType = 'scheduler' | 'data-structures' | 'array-visualizer';
+export type ViewType = 'scheduler' | 'data-structures' | 'array-visualizer' | 'linked-list-visualizer';
 
 function App() {
   const [activeTab, setActiveTab] = useState<ViewType>(() => {
@@ -21,7 +22,7 @@ function App() {
 
   return (
     <SimulationProvider>
-      <Navbar activeTab={activeTab === 'array-visualizer' ? 'data-structures' : activeTab} onTabChange={setActiveTab as any} />
+      <Navbar activeTab={(activeTab === 'array-visualizer' || activeTab === 'linked-list-visualizer') ? 'data-structures' : activeTab} onTabChange={setActiveTab as any} />
       <div className="page-wrapper">
         <div className="left-accent"></div>
         <div className="main-content">
@@ -46,8 +47,13 @@ function App() {
             </>
           ) : activeTab === 'array-visualizer' ? (
             <ArrayVisualizer />
+          ) : activeTab === 'linked-list-visualizer' ? (
+            <LinkedListVisualizer />
           ) : (
-            <DataStructures onOpenVisualizer={() => setActiveTab('array-visualizer')} />
+            <DataStructures 
+              onOpenVisualizer={() => setActiveTab('array-visualizer')} 
+              onOpenLinkedList={() => setActiveTab('linked-list-visualizer')}
+            />
           )}
         </div>
       </div>
