@@ -1,5 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './ArrayVisualizer.css';
+import type { Step, StepType } from './AlgoEngine';
+import {
+  ALGO_INFO,
+  generateBubbleSortSteps, generateSelectionSortSteps,
+  generateInsertionSortSteps, generateMergeSortSteps, generateQuickSortSteps,
+  generateLinearSearchSteps, generateBinarySearchSteps
+} from './AlgoEngine';
 
 const LANGUAGES = ['C++', 'C#', 'C', 'Java', 'Python'];
 const SORTING_ALGOS = ['Bubble Sort', 'Selection Sort', 'Insertion Sort', 'Merge Sort', 'Quick Sort'];
@@ -7,181 +14,349 @@ const SEARCHING_ALGOS = ['Linear Search', 'Binary Search'];
 
 const SNIPPETS: Record<string, Record<string, string>> = {
   'Bubble Sort': {
-    'C++': `void bubbleSort(int arr[], int n) {\n  for (int i = 0; i < n - 1; i++)\n    for (int j = 0; j < n - i - 1; j++)\n      if (arr[j] > arr[j + 1])\n        swap(arr[j], arr[j + 1]);\n}`,
-    'C#': `static void BubbleSort(int[] arr) {\n  int n = arr.Length;\n  for (int i = 0; i < n - 1; i++)\n    for (int j = 0; j < n - i - 1; j++)\n      if (arr[j] > arr[j + 1]) {\n        int temp = arr[j];\n        arr[j] = arr[j + 1];\n        arr[j + 1] = temp;\n      }\n}`,
-    'C': `void bubbleSort(int arr[], int n) {\n  for (int i = 0; i < n - 1; i++)\n    for (int j = 0; j < n - i - 1; j++)\n      if (arr[j] > arr[j + 1]) {\n        int temp = arr[j];\n        arr[j] = arr[j + 1];\n        arr[j + 1] = temp;\n      }\n}`,
-    'Java': `void bubbleSort(int arr[]) {\n  int n = arr.length;\n  for (int i = 0; i < n-1; i++)\n    for (int j = 0; j < n-i-1; j++)\n      if (arr[j] > arr[j+1]) {\n        int temp = arr[j];\n        arr[j] = arr[j+1];\n        arr[j+1] = temp;\n      }\n}`,
-    'Python': `def bubble_sort(arr):\n    n = len(arr)\n    for i in range(n):\n        for j in range(0, n-i-1):\n            if arr[j] > arr[j+1]:\n                arr[j], arr[j+1] = arr[j+1], arr[j]`
+    'C++': `void bubbleSort(int arr[], int n) {\n  for (int i = 0; i < n-1; i++)\n    for (int j = 0; j < n-i-1; j++)\n      if (arr[j] > arr[j+1])\n        swap(arr[j], arr[j+1]);\n}`,
+    'Java': `void bubbleSort(int[] arr) {\n  int n = arr.length;\n  for (int i = 0; i < n-1; i++)\n    for (int j = 0; j < n-i-1; j++)\n      if (arr[j] > arr[j+1]) {\n        int t=arr[j]; arr[j]=arr[j+1]; arr[j+1]=t;\n      }\n}`,
+    'Python': `def bubble_sort(arr):\n  n = len(arr)\n  for i in range(n):\n    for j in range(0, n-i-1):\n      if arr[j] > arr[j+1]:\n        arr[j], arr[j+1] = arr[j+1], arr[j]`,
+    'C': `void bubbleSort(int arr[], int n) {\n  for (int i=0;i<n-1;i++)\n    for(int j=0;j<n-i-1;j++)\n      if(arr[j]>arr[j+1]){\n        int t=arr[j];arr[j]=arr[j+1];arr[j+1]=t;\n      }\n}`,
+    'C#': `void BubbleSort(int[] arr) {\n  for(int i=0;i<arr.Length-1;i++)\n    for(int j=0;j<arr.Length-i-1;j++)\n      if(arr[j]>arr[j+1]){\n        int t=arr[j];arr[j]=arr[j+1];arr[j+1]=t;\n      }\n}`
+  },
+  'Selection Sort': {
+    'C++': `void selectionSort(int arr[], int n) {\n  for (int i = 0; i < n-1; i++) {\n    int min_idx = i;\n    for (int j = i+1; j < n; j++)\n      if (arr[j] < arr[min_idx])\n        min_idx = j;\n    swap(arr[min_idx], arr[i]);\n  }\n}`,
+    'Java': `void selectionSort(int[] arr) {\n  for (int i = 0; i < arr.length-1; i++) {\n    int min_idx = i;\n    for (int j = i+1; j < arr.length; j++)\n      if (arr[j] < arr[min_idx]) min_idx = j;\n    int t = arr[min_idx]; arr[min_idx] = arr[i]; arr[i] = t;\n  }\n}`,
+    'Python': `def selection_sort(arr):\n  for i in range(len(arr)):\n    min_idx = i\n    for j in range(i+1, len(arr)):\n      if arr[min_idx] > arr[j]:\n        min_idx = j\n    arr[i], arr[min_idx] = arr[min_idx], arr[i]`,
+    'C': `void selectionSort(int arr[], int n) {\n  for (int i=0; i<n-1; i++) {\n    int min_idx=i;\n    for (int j=i+1; j<n; j++)\n      if (arr[j]<arr[min_idx]) min_idx=j;\n    int t=arr[min_idx]; arr[min_idx]=arr[i]; arr[i]=t;\n  }\n}`,
+    'C#': `void SelectionSort(int[] arr) {\n  for (int i=0; i<arr.Length-1; i++) {\n    int min_idx=i;\n    for (int j=i+1; j<arr.Length; j++)\n      if (arr[j]<arr[min_idx]) min_idx=j;\n    int t=arr[min_idx]; arr[min_idx]=arr[i]; arr[i]=t;\n  }\n}`
+  },
+  'Insertion Sort': {
+    'C++': `void insertionSort(int arr[], int n) {\n  for (int i = 1; i < n; i++) {\n    int key = arr[i];\n    int j = i - 1;\n    while (j >= 0 && arr[j] > key) {\n      arr[j + 1] = arr[j];\n      j = j - 1;\n    }\n    arr[j + 1] = key;\n  }\n}`,
+    'Java': `void insertionSort(int[] arr) {\n  for (int i = 1; i < arr.length; ++i) {\n    int key = arr[i];\n    int j = i - 1;\n    while (j >= 0 && arr[j] > key) {\n      arr[j + 1] = arr[j];\n      j = j - 1;\n    }\n    arr[j + 1] = key;\n  }\n}`,
+    'Python': `def insertion_sort(arr):\n  for i in range(1, len(arr)):\n    key = arr[i]\n    j = i-1\n    while j >= 0 and key < arr[j]:\n      arr[j + 1] = arr[j]\n      j -= 1\n    arr[j + 1] = key`,
+    'C': `void insertionSort(int arr[], int n) {\n  for (int i=1; i<n; i++) {\n    int key=arr[i], j=i-1;\n    while(j>=0 && arr[j]>key) { arr[j+1]=arr[j]; j--; }\n    arr[j+1]=key;\n  }\n}`,
+    'C#': `void InsertionSort(int[] arr) {\n  for (int i=1; i<arr.Length; i++) {\n    int key=arr[i], j=i-1;\n    while(j>=0 && arr[j]>key) { arr[j+1]=arr[j]; j--; }\n    arr[j+1]=key;\n  }\n}`
+  },
+  'Merge Sort': {
+    'C++': `void merge(int arr[], int l, int m, int r) { /* ... */ }\nvoid mergeSort(int arr[], int l, int r) {\n  if (l >= r) return;\n  int m = l + (r - l) / 2;\n  mergeSort(arr, l, m);\n  mergeSort(arr, m + 1, r);\n  merge(arr, l, m, r);\n}`,
+    'Java': `void merge(int[] arr, int l, int m, int r) { /* ... */ }\nvoid sort(int[] arr, int l, int r) {\n  if (l < r) {\n    int m = l + (r - l) / 2;\n    sort(arr, l, m);\n    sort(arr, m + 1, r);\n    merge(arr, l, m, r);\n  }\n}`,
+    'Python': `def merge_sort(arr):\n  if len(arr) > 1:\n    mid = len(arr)//2\n    L = arr[:mid]; R = arr[mid:]\n    merge_sort(L); merge_sort(R)\n    # merge logic...`,
+    'C': `void merge(int arr[], int l, int m, int r) { /* ... */ }\nvoid mergeSort(int arr[], int l, int r) {\n  if(l<r) {\n    int m = l+(r-l)/2;\n    mergeSort(arr, l, m);\n    mergeSort(arr, m+1, r);\n    merge(arr, l, m, r);\n  }\n}`,
+    'C#': `void Merge(int[] arr, int l, int m, int r) { /* ... */ }\nvoid MergeSort(int[] arr, int l, int r) {\n  if(l<r) {\n    int m = l+(r-l)/2;\n    MergeSort(arr, l, m);\n    MergeSort(arr, m+1, r);\n    Merge(arr, l, m, r);\n  }\n}`
+  },
+  'Quick Sort': {
+    'C++': `int partition(int arr[], int low, int high) {\n  int pivot = arr[high], i = (low - 1);\n  for (int j = low; j <= high - 1; j++) {\n    if (arr[j] < pivot)\n      swap(arr[++i], arr[j]);\n  }\n  swap(arr[i + 1], arr[high]);\n  return (i + 1);\n}\nvoid quickSort(int arr[], int low, int high) {\n  if (low < high) {\n    int pi = partition(arr, low, high);\n    quickSort(arr, low, pi - 1);\n    quickSort(arr, pi + 1, high);\n  }\n}`,
+    'Java': `int partition(int[] arr, int low, int high) {\n  int pivot = arr[high], i = (low-1);\n  for (int j=low; j<high; j++) {\n    if (arr[j] < pivot) {\n      int t=arr[++i]; arr[i]=arr[j]; arr[j]=t;\n    }\n  }\n  int t=arr[i+1]; arr[i+1]=arr[high]; arr[high]=t;\n  return i+1;\n}\nvoid sort(int[] arr, int low, int high) {\n  if (low < high) {\n    int pi = partition(arr, low, high);\n    sort(arr, low, pi-1);\n    sort(arr, pi+1, high);\n  }\n}`,
+    'Python': `def partition(arr, low, high):\n  pivot = arr[high]\n  i = low - 1\n  for j in range(low, high):\n    if arr[j] <= pivot:\n      i += 1\n      arr[i], arr[j] = arr[j], arr[i]\n  arr[i + 1], arr[high] = arr[high], arr[i + 1]\n  return i + 1\n\ndef quick_sort(arr, low, high):\n  if low < high:\n    pi = partition(arr, low, high)\n    quick_sort(arr, low, pi - 1)\n    quick_sort(arr, pi + 1, high)`,
+    'C': `int partition(int arr[], int low, int high) {\n  int pivot=arr[high], i=(low-1);\n  for(int j=low;j<high;j++) {\n    if(arr[j]<pivot) { i++; int t=arr[i]; arr[i]=arr[j]; arr[j]=t; }\n  }\n  int t=arr[i+1]; arr[i+1]=arr[high]; arr[high]=t;\n  return (i+1);\n}\nvoid quickSort(int arr[], int low, int high) {\n  if(low<high) {\n    int pi = partition(arr, low, high);\n    quickSort(arr, low, pi-1);\n    quickSort(arr, pi+1, high);\n  }\n}`,
+    'C#': `int Partition(int[] arr, int low, int high) {\n  int pivot=arr[high], i=(low-1);\n  for(int j=low;j<high;j++) {\n    if(arr[j]<pivot) { i++; int t=arr[i]; arr[i]=arr[j]; arr[j]=t; }\n  }\n  int t=arr[i+1]; arr[i+1]=arr[high]; arr[high]=t;\n  return i+1;\n}\nvoid QuickSort(int[] arr, int low, int high) {\n  if(low<high) {\n    int pi = Partition(arr, low, high);\n    QuickSort(arr, low, pi-1);\n    QuickSort(arr, pi+1, high);\n  }\n}`
   },
   'Linear Search': {
-    'C++': `int linearSearch(int arr[], int n, int x) {\n  for (int i = 0; i < n; i++)\n    if (arr[i] == x)\n      return i;\n  return -1;\n}`,
-    'C#': `static int LinearSearch(int[] arr, int x) {\n  for (int i = 0; i < arr.Length; i++)\n    if (arr[i] == x)\n      return i;\n  return -1;\n}`,
-    'C': `int linearSearch(int arr[], int n, int x) {\n  for (int i = 0; i < n; i++)\n    if (arr[i] == x)\n      return i;\n  return -1;\n}`,
-    'Java': `int linearSearch(int arr[], int x) {\n  int n = arr.length;\n  for (int i = 0; i < n; i++)\n    if (arr[i] == x)\n      return i;\n  return -1;\n}`,
-    'Python': `def linear_search(arr, x):\n    for i in range(len(arr)):\n        if arr[i] == x:\n            return i\n    return -1`
+    'C++': `int linearSearch(int arr[], int n, int x) {\n  for (int i=0; i<n; i++)\n    if (arr[i] == x) return i;\n  return -1;\n}`,
+    'Java': `int linearSearch(int[] arr, int x) {\n  for (int i=0; i<arr.length; i++)\n    if (arr[i]==x) return i;\n  return -1;\n}`,
+    'Python': `def linear_search(arr, x):\n  for i in range(len(arr)):\n    if arr[i] == x:\n      return i\n  return -1`,
+    'C': `int linearSearch(int arr[],int n,int x){\n  for(int i=0;i<n;i++)\n    if(arr[i]==x) return i;\n  return -1;\n}`,
+    'C#': `int LinearSearch(int[] arr, int x){\n  for(int i=0;i<arr.Length;i++)\n    if(arr[i]==x) return i;\n  return -1;\n}`
+  },
+  'Binary Search': {
+    'C++': `int binarySearch(int arr[], int n, int x) {\n  int l=0,r=n-1;\n  while(l<=r){\n    int m=l+(r-l)/2;\n    if(arr[m]==x) return m;\n    else if(arr[m]<x) l=m+1;\n    else r=m-1;\n  }\n  return -1;\n}`,
+    'Java': `int binarySearch(int[] arr, int x) {\n  int l=0,r=arr.length-1;\n  while(l<=r){\n    int m=(l+r)/2;\n    if(arr[m]==x) return m;\n    else if(arr[m]<x) l=m+1;\n    else r=m-1;\n  }\n  return -1;\n}`,
+    'Python': `def binary_search(arr, x):\n  l, r = 0, len(arr)-1\n  while l <= r:\n    m = (l+r)//2\n    if arr[m]==x: return m\n    elif arr[m]<x: l=m+1\n    else: r=m-1\n  return -1`,
+    'C': `int binarySearch(int arr[],int n,int x){\n  int l=0,r=n-1;\n  while(l<=r){\n    int m=(l+r)/2;\n    if(arr[m]==x) return m;\n    else if(arr[m]<x) l=m+1;\n    else r=m-1;\n  }\n  return -1;\n}`,
+    'C#': `int BinarySearch(int[] arr, int x){\n  int l=0,r=arr.Length-1;\n  while(l<=r){\n    int m=(l+r)/2;\n    if(arr[m]==x) return m;\n    else if(arr[m]<x) l=m+1;\n    else r=m-1;\n  }\n  return -1;\n}`
   }
 };
 
+const COLOR_MAP: Record<StepType, string> = {
+  compare: '#FBBF24', swap: '#EF4444', sorted: '#10B981',
+  active: '#6366F1', found: '#10B981', pivot: '#F59E0B',
+  left: '#3B82F6', right: '#EF4444', mid: '#8B5CF6',
+  eliminated: '#94A3B8', reset: '#E2E8F0'
+};
+
+const LABEL_MAP: Record<StepType, string> = {
+  compare: 'Comparing', swap: 'Swapping', sorted: 'Sorted',
+  active: 'Active', found: 'Found!', pivot: 'Pivot',
+  left: 'Left', right: 'Right', mid: 'Mid',
+  eliminated: 'Eliminated', reset: 'Default'
+};
+
+function getBoxStyle(type: StepType) {
+  return { background: COLOR_MAP[type] + '33', border: `2px solid ${COLOR_MAP[type]}`, color: COLOR_MAP[type] };
+}
+
 const ArrayVisualizer: React.FC = () => {
-  const [data, setData] = useState<number[]>([42, 15, 8, 23, 56]);
+  const [data, setData] = useState<number[]>([38, 15, 8, 42, 23, 56, 11]);
   const [inputValue, setInputValue] = useState('');
-  
   const [sortAlgo, setSortAlgo] = useState('');
   const [searchAlgo, setSearchAlgo] = useState('');
   const [language, setLanguage] = useState('C++');
+  const [searchTarget, setSearchTarget] = useState('');
 
-  const codeToShow = SNIPPETS[sortAlgo]?.[language] || SNIPPETS[searchAlgo]?.[language] || '// Select an algorithm from the menus above\\n// to view the corresponding code.';
+  const [steps, setSteps] = useState<Step[]>([]);
+  const [currentStep, setCurrentStep] = useState(-1);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [speed, setSpeed] = useState(600);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortAlgo(e.target.value);
-    setSearchAlgo('');
-  };
+  const activeAlgo = sortAlgo || searchAlgo;
+  const algoInfo = activeAlgo ? ALGO_INFO[activeAlgo] : null;
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSearchAlgo(e.target.value);
-    setSortAlgo('');
-  };
+  const codeToShow = SNIPPETS[activeAlgo]?.[language]
+    || '// Select an algorithm above\n// to view its code here.';
+
+  const currentDisplay = currentStep >= 0 && steps[currentStep]
+    ? steps[currentStep]
+    : null;
+
+  const displayArray = currentDisplay ? currentDisplay.array : data;
+  const highlights = currentDisplay ? currentDisplay.highlights : [];
+  const getHighlight = (i: number) => highlights.find(h => h.index === i);
+
+  function stopPlayback() {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = null;
+    setIsPlaying(false);
+  }
+
+  function generateSteps() {
+    stopPlayback();
+    setCurrentStep(-1);
+    if (!activeAlgo) return;
+    let s: Step[] = [];
+    if (sortAlgo === 'Bubble Sort') s = generateBubbleSortSteps(data);
+    else if (sortAlgo === 'Selection Sort') s = generateSelectionSortSteps(data);
+    else if (sortAlgo === 'Insertion Sort') s = generateInsertionSortSteps(data);
+    else if (sortAlgo === 'Merge Sort') s = generateMergeSortSteps(data);
+    else if (sortAlgo === 'Quick Sort') s = generateQuickSortSteps(data);
+    else if (searchAlgo === 'Linear Search') s = generateLinearSearchSteps(data, parseInt(searchTarget) || 0);
+    else if (searchAlgo === 'Binary Search') s = generateBinarySearchSteps(data, parseInt(searchTarget) || 0);
+    setSteps(s);
+    return s;
+  }
+
+  function handlePlay() {
+    let s = steps;
+    if (steps.length === 0 || currentStep >= steps.length - 1) {
+      const fresh = generateSteps();
+      if (!fresh || fresh.length === 0) return;
+      s = fresh;
+      setSteps(s);
+      setCurrentStep(0);
+      setIsPlaying(true);
+      let idx = 0;
+      const id = setInterval(() => {
+        idx++;
+        if (idx >= s.length) { clearInterval(id); setIsPlaying(false); setCurrentStep(s.length - 1); return; }
+        setCurrentStep(idx);
+      }, speed);
+      intervalRef.current = id;
+      return;
+    }
+    setIsPlaying(true);
+    let idx = currentStep;
+    const id = setInterval(() => {
+      idx++;
+      if (idx >= s.length) { clearInterval(id); setIsPlaying(false); setCurrentStep(s.length - 1); return; }
+      setCurrentStep(idx);
+    }, speed);
+    intervalRef.current = id;
+  }
+
+  function handlePause() { stopPlayback(); }
+
+  function handleReset() {
+    stopPlayback();
+    setCurrentStep(-1);
+    setSteps([]);
+  }
+
+  function handleStepForward() {
+    if (steps.length === 0) { const s = generateSteps(); if (s && s.length > 0) { setSteps(s); setCurrentStep(0); } return; }
+    if (currentStep < steps.length - 1) setCurrentStep(c => c + 1);
+  }
+
+  function handleStepBack() {
+    if (currentStep > 0) setCurrentStep(c => c - 1);
+  }
+
+  useEffect(() => { return () => stopPlayback(); }, []);
 
   const handleAdd = () => {
     const num = parseInt(inputValue, 10);
-    if (!isNaN(num)) {
-      setData([...data, num]);
-      setInputValue('');
-    }
+    if (!isNaN(num) && data.length < 12) { setData([...data, num]); setInputValue(''); handleReset(); }
   };
 
-  const handleRemove = (index: number) => {
-    setData(data.filter((_, i) => i !== index));
-  };
-
-  const handleClear = () => setData([]);
-
+  const handleRemove = (index: number) => { setData(data.filter((_, i) => i !== index)); handleReset(); };
+  const handleClear = () => { setData([]); handleReset(); };
   const handleRandom = () => {
-    const randLength = Math.floor(Math.random() * 5) + 3; // 3 to 7 elements
-    const newArr = Array.from({ length: randLength }, () => Math.floor(Math.random() * 100));
-    setData(newArr);
+    const len = Math.floor(Math.random() * 5) + 5;
+    setData(Array.from({ length: len }, () => Math.floor(Math.random() * 90) + 5));
+    handleReset();
   };
 
-  const renderCodeWithSyntax = (code: string) => {
-    const keywords = ['void', 'int', 'for', 'if', 'return', 'def', 'len', 'range', 'static'];
-    const regex = new RegExp("\\b(" + keywords.join('|') + ")\\b", "g");
-    
-    const lines = code.split('\n');
-    return lines.map((line, i) => {
-      const parts = line.split(regex);
-      return (
-        <div key={i}>
-          {parts.map((part, j) => 
-            keywords.includes(part) ? <span key={j} className="keyword">{part}</span> : part
-          )}
-        </div>
-      );
-    });
-  };
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => { setSortAlgo(e.target.value); setSearchAlgo(''); handleReset(); };
+  const handleSearchChange = (e: React.ChangeEvent<HTMLSelectElement>) => { setSearchAlgo(e.target.value); setSortAlgo(''); handleReset(); };
+
+  const isSearching = !!searchAlgo;
+  const progress = steps.length > 0 ? Math.round(((currentStep + 1) / steps.length) * 100) : 0;
 
   return (
     <div className="av-container">
-      {/* Sidebar */}
+      {/* SIDEBAR */}
       <div className="av-sidebar">
         <div className="av-header">
           <h2>Array Builder</h2>
-          <p>Configure your data set</p>
+          <p>Build your dataset & run algorithms</p>
         </div>
 
         <div className="av-input-group">
-          <input 
-            type="number" 
-            className="av-input" 
-            placeholder="Enter number" 
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-          />
-          <button className="av-btn-add" onClick={handleAdd}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Add
-          </button>
+          <input type="number" className="av-input" placeholder="Add number" value={inputValue}
+            onChange={e => setInputValue(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAdd()} />
+          <button className="av-btn-add" onClick={handleAdd}>+ Add</button>
         </div>
 
         <div className="av-pills">
           {data.map((num, i) => (
-            <div className="av-pill" key={i}>
-              {num}
-              <button className="av-pill-remove" onClick={() => handleRemove(i)}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
+            <div className="av-pill" key={i}>{num}
+              <button className="av-pill-remove" onClick={() => handleRemove(i)}>✕</button>
             </div>
           ))}
         </div>
 
         <div className="av-actions">
-          <button className="av-btn-action" onClick={handleClear}>Clear All</button>
-          <button className="av-btn-action" onClick={handleRandom}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-8.36l5.67-5.67"/></svg>
-            Random
-          </button>
+          <button className="av-btn-action" onClick={handleClear}>🗑 Clear</button>
+          <button className="av-btn-action" onClick={handleRandom}>🎲 Random</button>
         </div>
 
-        <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '24px 0' }} />
+        <hr className="av-divider" />
 
         <div className="av-section">
           <h3 className="av-section-title">Sorting Algorithms</h3>
           <select className="av-select" value={sortAlgo} onChange={handleSortChange}>
             <option value="" disabled>Select Algorithm...</option>
-            {SORTING_ALGOS.map(algo => <option key={algo} value={algo}>{algo}</option>)}
+            {SORTING_ALGOS.map(a => <option key={a}>{a}</option>)}
           </select>
-          
-          <h3 className="av-section-title" style={{ marginTop: '16px' }}>Searching Algorithms</h3>
+          <h3 className="av-section-title">Searching Algorithms</h3>
           <select className="av-select" value={searchAlgo} onChange={handleSearchChange}>
             <option value="" disabled>Select Algorithm...</option>
-            {SEARCHING_ALGOS.map(algo => <option key={algo} value={algo}>{algo}</option>)}
+            {SEARCHING_ALGOS.map(a => <option key={a}>{a}</option>)}
           </select>
+          {isSearching && (
+            <div style={{ marginTop: 12 }}>
+              <h3 className="av-section-title">Search Target</h3>
+              <input type="number" className="av-input" placeholder="Enter target value"
+                value={searchTarget} onChange={e => { setSearchTarget(e.target.value); handleReset(); }} />
+            </div>
+          )}
         </div>
 
-        <div className="av-section" style={{ padding: '0', background: 'transparent', border: 'none' }}>
+        {algoInfo && (
+          <div className="av-complexity-card">
+            <h3 className="av-section-title">Time Complexity</h3>
+            <div className="av-complexity-grid">
+              <div className="av-complexity-item best"><span>Best</span><strong>{algoInfo.best}</strong></div>
+              <div className="av-complexity-item avg"><span>Average</span><strong>{algoInfo.average}</strong></div>
+              <div className="av-complexity-item worst"><span>Worst</span><strong>{algoInfo.worst}</strong></div>
+              <div className="av-complexity-item space"><span>Space</span><strong>{algoInfo.space}</strong></div>
+            </div>
+            <p className="av-algo-desc">{algoInfo.description}</p>
+          </div>
+        )}
+
+        <div className="av-section" style={{ padding: 0, background: 'transparent', border: 'none' }}>
           <h3 className="av-section-title">Code Generator</h3>
-          
           <div className="av-lang-tabs">
             {LANGUAGES.map(lang => (
-              <button 
-                key={lang} 
-                className={`av-lang-tab ${language === lang ? 'active' : ''}`}
-                onClick={() => setLanguage(lang)}
-              >
-                {lang}
-              </button>
+              <button key={lang} className={`av-lang-tab ${language === lang ? 'active' : ''}`} onClick={() => setLanguage(lang)}>{lang}</button>
             ))}
           </div>
-
           <div className="av-code-block">
-            <pre>
-              {renderCodeWithSyntax(codeToShow)}
-            </pre>
+            <pre>{codeToShow.split('\n').map((line, i) => {
+              const keywords = ['void', 'int', 'for', 'if', 'return', 'def', 'len', 'range', 'while', 'else', 'elif'];
+              const parts = line.split(new RegExp("\\b(" + keywords.join('|') + ")\\b", "g"));
+              return <div key={i}>{parts.map((p, j) => keywords.includes(p) ? <span key={j} className="kw">{p}</span> : p)}</div>;
+            })}</pre>
           </div>
-
-          <button className="av-btn-generate">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-            Generate Code
-          </button>
         </div>
       </div>
 
-      {/* Main Visualization Area */}
+      {/* MAIN CANVAS */}
       <div className="av-main">
-        <div className="av-status-badge">
-          <div className="av-status-dot"></div>
-          Ready to visualize algorithms
+
+        {/* Controls */}
+        <div className="av-controls-bar">
+          <div className="av-playback">
+            <button className="av-ctrl-btn" onClick={handleStepBack} disabled={currentStep <= 0} title="Step Back">⏮</button>
+            {isPlaying
+              ? <button className="av-ctrl-btn play active" onClick={handlePause} title="Pause">⏸</button>
+              : <button className="av-ctrl-btn play" onClick={handlePlay} disabled={!activeAlgo || data.length === 0} title="Play">▶</button>
+            }
+            <button className="av-ctrl-btn" onClick={handleStepForward} disabled={!activeAlgo || (steps.length > 0 && currentStep >= steps.length - 1)} title="Step Forward">⏭</button>
+            <button className="av-ctrl-btn reset" onClick={handleReset} title="Reset">↺</button>
+          </div>
+
+          <div className="av-speed-control">
+            <span>Speed</span>
+            <input type="range" min={100} max={1500} step={100} value={1600 - speed}
+              onChange={e => setSpeed(1600 - parseInt(e.target.value))} />
+            <span>{speed < 400 ? 'Fast' : speed < 900 ? 'Med' : 'Slow'}</span>
+          </div>
+
+          {steps.length > 0 && (
+            <div className="av-step-counter">
+              Step {Math.max(0, currentStep + 1)} / {steps.length}
+            </div>
+          )}
         </div>
 
-        <div className="av-array-display">
-          {data.map((num, i) => (
-            <div className="av-array-element" key={i}>
-              <div className={`av-box av-box-${i % 7}`}>
-                {num}
-              </div>
-              <div className="av-index">{i}</div>
+        {/* Progress Bar */}
+        {steps.length > 0 && (
+          <div className="av-progress-bar-wrap">
+            <div className="av-progress-bar" style={{ width: `${progress}%` }} />
+          </div>
+        )}
+
+        {/* Legend */}
+        <div className="av-legend">
+          {(['compare','swap','sorted','found','pivot','left','mid','right','eliminated'] as StepType[]).map(type => (
+            <div key={type} className="av-legend-item">
+              <div className="av-legend-dot" style={{ background: COLOR_MAP[type] }} />
+              <span>{LABEL_MAP[type]}</span>
             </div>
           ))}
+        </div>
+
+        {/* Array Display */}
+        <div className="av-canvas">
+          <div className="av-array-display">
+            {displayArray.map((num, i) => {
+              const hl = getHighlight(i);
+              const boxStyle = hl ? getBoxStyle(hl.type) : { background: '#F1F5F9', border: '2px solid #CBD5E1', color: '#475569' };
+              return (
+                <div className="av-array-element" key={i}>
+                  <div className="av-box" style={{ ...boxStyle, transition: 'all 0.3s ease' }}>
+                    {num}
+                    {hl && <div className="av-box-label">{LABEL_MAP[hl.type]}</div>}
+                  </div>
+                  <div className="av-index">[{i}]</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Description */}
+          <div className="av-description">
+            {currentDisplay ? (
+              <div className="av-desc-text">
+                <span className="av-desc-icon">💡</span>
+                {currentDisplay.description}
+              </div>
+            ) : (
+              <div className="av-desc-empty">
+                {activeAlgo
+                  ? `Press ▶ Play to visualize ${activeAlgo}`
+                  : 'Select an algorithm from the sidebar to begin'}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
