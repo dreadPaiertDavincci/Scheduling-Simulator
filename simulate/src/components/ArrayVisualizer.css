@@ -213,3 +213,21 @@
 
 .av-box.default { background: #F1F5F9; border: 2px solid #CBD5E1; color: #475569; }
 
+
+/* Cumulative Debug Log */
+.av-description { width: 100%; max-width: 640px; max-height: 200px; overflow-y: auto; padding-right: 8px; border-radius: 12px; }
+.av-description::-webkit-scrollbar { width: 6px; }
+.av-description::-webkit-scrollbar-track { background: transparent; }
+.av-description::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+
+.av-log-list { display: flex; flex-direction: column; gap: 8px; }
+.av-log-item { background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 4px solid #94A3B8; border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.av-log-step-num { font-size: 10px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; }
+.av-log-text { font-size: 14px; color: #0F172A; font-weight: 500; line-height: 1.5; }
+
+[data-theme='dark'] .av-description::-webkit-scrollbar-thumb { background: #334155; }
+[data-theme='dark'] .av-log-item { background: #1E293B; border-color: #334155; border-left-width: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+[data-theme='dark'] .av-log-step-num { color: #64748B; }
+[data-theme='dark'] .av-log-text { color: #F8FAFC; }
+

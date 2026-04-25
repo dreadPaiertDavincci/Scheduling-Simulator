@@ -155,6 +155,8 @@ const ArrayVisualizer: React.FC = () => {
 
   const displayArray = currentDisplay ? currentDisplay.array : data;
   const highlights = currentDisplay ? currentDisplay.highlights : [];
+  const logEndRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => { logEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [currentStep]);
   const getHighlight = (i: number) => highlights.find(h => h.index === i);
 
   function stopPlayback() {
@@ -372,18 +374,32 @@ const ArrayVisualizer: React.FC = () => {
             })}
           </div>
 
-          {/* Description */}
+          {/* Description Log */}
           <div className="av-description">
-            {currentDisplay ? (
-              <div className="av-desc-text">
-                <span className="av-desc-icon">💡</span>
-                {currentDisplay.description}
-              </div>
-            ) : (
+            {steps.length === 0 || currentStep < 0 ? (
               <div className="av-desc-empty">
                 {activeAlgo
                   ? `Press ▶ Play to visualize ${activeAlgo}`
                   : 'Select an algorithm from the sidebar to begin'}
+              </div>
+            ) : (
+              <div className="av-log-list">
+                {steps.slice(0, currentStep + 1).map((step, i) => (
+                  <div
+                    key={i}
+                    className="av-log-item"
+                    style={{
+                      borderLeftColor: step.highlights[0]
+                        ? COLOR_MAP[step.highlights[0].type] || '#94A3B8'
+                        : '#94A3B8',
+                      opacity: i === currentStep ? 1 : 0.55,
+                    }}
+                  >
+                    <span className="av-log-step-num">Step {i + 1} / {steps.length}</span>
+                    <span className="av-log-text">💡 {step.description}</span>
+                  </div>
+                ))}
+                <div ref={logEndRef} />
               </div>
             )}
           </div>
