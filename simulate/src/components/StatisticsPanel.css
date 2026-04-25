@@ -2,7 +2,7 @@
   padding: 32px 24px;
 }
 .stat-header {
-  color: #3B82F6;
+  color: var(--primary-blue);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -18,7 +18,7 @@
 .stat-val {
   font-size: 28px;
   font-weight: 700;
-  color: #1E293B;
+  color: var(--text-primary);
   display: flex;
   align-items: baseline;
   gap: 6px;
@@ -27,12 +27,12 @@
 .stat-val span {
   font-size: 11px;
   font-weight: 700;
-  color: #94A3B8;
+  color: var(--text-tertiary);
   text-transform: uppercase;
 }
 .stat-lbl {
   font-size: 11px;
-  color: #94A3B8;
+  color: var(--text-secondary);
   font-weight: 500;
   margin-top: 4px;
 }
@@ -43,7 +43,7 @@
 .insight-header {
   font-size: 10px;
   font-weight: 700;
-  color: #1E293B;
+  color: var(--text-primary);
   letter-spacing: 1px;
   display: flex;
   align-items: center;
@@ -51,13 +51,13 @@
   margin-bottom: 16px;
 }
 .insight-icon {
-  color: #3B82F6;
+  color: var(--primary-blue);
   font-size: 14px;
   line-height: 1;
 }
 .insight-text {
   font-size: 12px;
-  color: #64748B;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
@@ -73,29 +73,29 @@
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
   font-size: 10px;
   font-weight: 700;
-  color: #94A3B8;
+  color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid var(--border-color);
 }
 .st-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
   font-size: 12px;
   font-weight: 600;
-  color: #64748B;
+  color: var(--text-secondary);
   margin-bottom: 24px;
   align-items: center;
 }
 .st-row:last-child {
   margin-bottom: 0;
 }
-.st-row .pid-1 { color: #3B82F6; }
-.st-row .pid-2 { color: #10B981; }
-.st-row .pid-3 { color: #F59E0B; }
-.st-row .pid-4 { color: #8B5CF6; }
+.st-row .pid-1 { color: var(--p1-color); }
+.st-row .pid-2 { color: var(--p2-color); }
+.st-row .pid-3 { color: var(--p3-color); }
+.st-row .pid-4 { color: var(--p4-color); }
 
 .visualization-card {
   padding: 32px;
@@ -109,11 +109,11 @@
 .ar-text {
   font-size: 16px;
   font-weight: 700;
-  color: #1E293B;
+  color: var(--text-primary);
 }
 .en-text {
   font-size: 12px;
-  color: #94A3B8;
+  color: var(--text-tertiary);
   font-weight: 500;
 }
 
@@ -126,7 +126,7 @@
 .vis-col-title {
   font-size: 10px;
   font-weight: 700;
-  color: #94A3B8;
+  color: var(--text-tertiary);
   letter-spacing: 0.5px;
   margin-bottom: 24px;
   text-transform: uppercase;
@@ -142,16 +142,16 @@
   font-size: 10px;
 }
 .bl-pid {
-  color: #CBD5E1;
+  color: var(--text-tertiary);
   font-weight: 600;
 }
 .bl-val {
-  color: #94A3B8;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 .bar-track {
   height: 6px;
-  background-color: #F1F5F9;
+  background-color: var(--bg-color);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -176,12 +176,12 @@
 .dt-val {
   font-size: 18px;
   font-weight: 700;
-  color: #1E293B;
+  color: var(--text-primary);
 }
 .dt-lbl {
   font-size: 8px;
   font-weight: 700;
-  color: #94A3B8;
+  color: var(--text-tertiary);
   letter-spacing: 1px;
 }
 

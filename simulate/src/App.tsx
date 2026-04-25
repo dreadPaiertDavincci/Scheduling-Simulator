@@ -1,17 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import { TimelineArea } from './components/TimelineArea';
 import StatisticsPanel from './components/StatisticsPanel';
 import Navbar from './components/Navbar';
 import DataStructures from './components/DataStructures';
+import ArrayVisualizer from './components/ArrayVisualizer';
 import { SimulationProvider } from './hooks/useSimulation';
 
+export type ViewType = 'scheduler' | 'data-structures' | 'array-visualizer';
+
 function App() {
-  const [activeTab, setActiveTab] = useState<'scheduler' | 'data-structures'>('scheduler');
+  const [activeTab, setActiveTab] = useState<ViewType>(() => {
+    const saved = sessionStorage.getItem('activeTab');
+    return (saved as ViewType) || 'scheduler';
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
 
   return (
     <SimulationProvider>
-      <Navbar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Navbar activeTab={activeTab === 'array-visualizer' ? 'data-structures' : activeTab} onTabChange={setActiveTab as any} />
       <div className="page-wrapper">
         <div className="left-accent"></div>
         <div className="main-content">
@@ -34,8 +44,10 @@ function App() {
 
               <StatisticsPanel />
             </>
+          ) : activeTab === 'array-visualizer' ? (
+            <ArrayVisualizer />
           ) : (
-            <DataStructures />
+            <DataStructures onOpenVisualizer={() => setActiveTab('array-visualizer')} />
           )}
         </div>
       </div>

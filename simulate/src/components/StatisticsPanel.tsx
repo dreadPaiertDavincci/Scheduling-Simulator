@@ -76,7 +76,7 @@ export default function StatisticsPanel() {
              </div>
              <div className="insight-text">
                {stats.length > 0 ? (
-                 <>Simulation complete using <strong style={{color: '#1E293B'}}>{result?.steps[0].type === 'running' ? 'Scheduling' : 'Algorithm'}</strong>. Efficiency target achieved.</>
+                 <>Simulation complete using <strong style={{color: 'var(--text-primary)'}}>{result?.steps[0].type === 'running' ? 'Scheduling' : 'Algorithm'}</strong>. Efficiency target achieved.</>
                ) : (
                  <>Add processes and select an algorithm to generate insights.</>
                )}
@@ -105,7 +105,7 @@ export default function StatisticsPanel() {
            <div className="vis-col">
               <div className="vis-col-title" style={{ display: 'flex', justifyContent: 'space-between' }}>
                 TURNAROUND TIME
-                <span style={{ color: '#1E3A8A' }}>● T/A</span>
+                <span style={{ color: 'var(--primary-blue)' }}>● T/A</span>
               </div>
               {stats.map(s => (
                 <BarRow key={s.id} label={`P${s.id}`} val={`${s.turnaroundTime}ms`} percent={Math.min(100, (s.turnaroundTime / (parseFloat(avgTAT) * 2 || 1)) * 50)} color="#1E3A8A" />
@@ -128,13 +128,13 @@ export default function StatisticsPanel() {
                    <path
                      className="circle-bg"
                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                     fill="none" stroke="#E2E8F0" strokeWidth="4"
+                     fill="none" stroke="var(--border-color)" strokeWidth="4"
                    />
                    <path
                      className="circle"
                      strokeDasharray={`${cpuUtil}, 100`}
                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                     fill="none" stroke="#1E3A8A" strokeWidth="4"
+                     fill="none" stroke="var(--primary-blue)" strokeWidth="4"
                    />
                  </svg>
                  <div className="donut-text">
@@ -143,8 +143,8 @@ export default function StatisticsPanel() {
                  </div>
               </div>
               <div className="donut-legend">
-                <span style={{ color: '#1E3A8A', marginRight: '16px' }}>■ <span style={{ color: '#64748B'}}>CPU BUSY</span></span>
-                <span style={{ color: '#E2E8F0' }}>■ <span style={{ color: '#64748B'}}>IDLE TIME</span></span>
+                <span style={{ color: 'var(--primary-blue)', marginRight: '16px' }}>■ <span style={{ color: 'var(--text-secondary)'}}>CPU BUSY</span></span>
+                <span style={{ color: 'var(--border-color)' }}>■ <span style={{ color: 'var(--text-secondary)'}}>IDLE TIME</span></span>
               </div>
            </div>
         </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import logo from '../assets/logo.png';
 import { useTheme } from '../hooks/useTheme';
 import { useLanguage } from '../hooks/useLanguage';
 import './Navbar.css';
@@ -16,7 +17,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, onTabChange }) => {
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-brand">
-          <span className="brand-dot"></span>
+          <img src={logo} className="navbar-logo" alt="SimuLab Logo" />
           SimuLab
         </div>
 

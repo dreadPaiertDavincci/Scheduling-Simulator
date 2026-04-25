@@ -243,7 +243,7 @@ export default function Sidebar() {
         <div className="process-table">
           <div className="header-row" style={{ 
             display: 'grid',
-            gridTemplateColumns: '32px 55px 55px 70px 50px 1fr 28px',
+            gridTemplateColumns: '30px 45px 45px 70px 45px 1fr 25px',
             gap: '6px',
             padding: '0 4px 8px 0',
             borderBottom: '1px solid var(--border-color)',
@@ -280,7 +280,7 @@ export default function Sidebar() {
               return (
                 <div className="process-row" key={p.id} style={{ 
                   display: 'grid',
-                  gridTemplateColumns: '32px 55px 55px 70px 50px 1fr 28px',
+                  gridTemplateColumns: '30px 45px 45px 70px 45px 1fr 25px',
                   gap: '6px',
                   padding: '10px 0',
                   alignItems: 'center',
@@ -371,8 +371,8 @@ export default function Sidebar() {
                     {(p.wait || 0)}ms
                   </div>
                   
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <div className={`status-badge ${statusClass}`} style={{ padding: '4px 10px', fontSize: '10px', borderRadius: '6px', fontWeight: 700 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <div className={`status-badge ${statusClass}`} style={{ padding: '4px 8px', fontSize: '9px', borderRadius: '6px', fontWeight: 700, whiteSpace: 'nowrap' }}>
                       {p.status || 'NEW'}
                     </div>
                   </div>

@@ -24,7 +24,7 @@ export function TimelineArea() {
       content: (
         <div>
           <div style={{ fontWeight: 700, marginBottom: '4px' }}>{process}</div>
-          <div style={{ color: '#94A3B8' }}>{details}</div>
+          <div style={{ color: 'var(--text-tertiary)' }}>{details}</div>
         </div>
       )
     });
@@ -111,7 +111,7 @@ export function TimelineArea() {
           <div className="flow-bar">
             {groupedSteps.map((group, i) => {
               if (group.type !== 'running') {
-                return <div key={i} style={{ width: `${(group.duration / maxTime) * 100}%`, backgroundColor: '#F8FAFC', borderRight: '1px dashed #E2E8F0' }}></div>;
+                return <div key={i} style={{ width: `${(group.duration / maxTime) * 100}%`, backgroundColor: 'var(--bg-color)', borderRight: '1px dashed var(--border-color)' }}></div>;
               }
               const widthPerc = (group.duration / maxTime) * 100;
               return (
@@ -228,7 +228,7 @@ export function TimelineArea() {
               </div>
             ))}
             {readyQueue.length === 0 && (
-              <div className="queue-item empty" style={{ width: '56px', height: '56px', borderRadius: '12px', border: '1px dashed #E2E8F0', color: '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 400 }}>
+              <div className="queue-item empty" style={{ width: '56px', height: '56px', borderRadius: '12px', border: '1px dashed var(--border-color)', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 400 }}>
                 Empty
               </div>
             )}
@@ -245,11 +245,11 @@ export function TimelineArea() {
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div className="timeline-title-sub" style={{ color: 'var(--text-tertiary)', marginBottom: '8px', letterSpacing: '1px' }}>{t('timeline.remaining')}</div>
-                <div className="running-rem" style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#1E293B' }}>{currentStep.remainingBurst}ms</div>
+                <div className="running-rem" style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>{currentStep.remainingBurst}ms</div>
               </div>
             </>
           ) : (
-            <div style={{ width: '100%', textAlign: 'center', color: '#94A3B8', fontWeight: 500 }}>
+            <div style={{ width: '100%', textAlign: 'center', color: 'var(--text-tertiary)', fontWeight: 500 }}>
               {currentStep?.type === 'idle' ? t('timeline.cpu_idle') : t('timeline.no_simulation')}
             </div>
           )}
@@ -276,7 +276,7 @@ export function TimelineArea() {
               </div>
             );
           }) : (
-            <div style={{ color: '#94A3B8', fontSize: '13px' }}>No events logged yet. Start the simulation to see events.</div>
+            <div style={{ color: 'var(--text-tertiary)', fontSize: '13px' }}>No events logged yet. Start the simulation to see events.</div>
           )}
         </div>
       </div>
