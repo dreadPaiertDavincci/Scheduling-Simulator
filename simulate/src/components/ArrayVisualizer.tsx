@@ -359,10 +359,10 @@ const ArrayVisualizer: React.FC = () => {
           <div className="av-array-display">
             {displayArray.map((num, i) => {
               const hl = getHighlight(i);
-              const boxStyle = hl ? getBoxStyle(hl.type) : { background: '#F1F5F9', border: '2px solid #CBD5E1', color: '#475569' };
+              const boxStyle = hl ? getBoxStyle(hl.type) : {};
               return (
                 <div className="av-array-element" key={i}>
-                  <div className="av-box" style={{ ...boxStyle, transition: 'all 0.3s ease' }}>
+                  <div className={`av-box ${!hl ? 'default' : ''}`} style={{ ...boxStyle, transition: 'all 0.3s ease' }}>
                     {num}
                     {hl && <div className="av-box-label">{LABEL_MAP[hl.type]}</div>}
                   </div>
