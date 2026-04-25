@@ -83,21 +83,58 @@ function getBoxStyle(type: StepType) {
 }
 
 const ArrayVisualizer: React.FC = () => {
-  const [data, setData] = useState<number[]>([38, 15, 8, 42, 23, 56, 11]);
+  const [data, setData] = useState<number[]>(() => {
+    try {
+      const saved = sessionStorage.getItem('av_data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return [38, 15, 8, 42, 23, 56, 11];
+  });
   const [inputValue, setInputValue] = useState('');
-  const [sortAlgo, setSortAlgo] = useState('');
-  const [searchAlgo, setSearchAlgo] = useState('');
-  const [language, setLanguage] = useState('C++');
-  const [searchTarget, setSearchTarget] = useState('');
+  const [sortAlgo, setSortAlgo] = useState(() => sessionStorage.getItem('av_sortAlgo') || '');
+  const [searchAlgo, setSearchAlgo] = useState(() => sessionStorage.getItem('av_searchAlgo') || '');
+  const [language, setLanguage] = useState(() => sessionStorage.getItem('av_language') || 'C++');
+  const [searchTarget, setSearchTarget] = useState(() => sessionStorage.getItem('av_searchTarget') || '');
 
-  const [steps, setSteps] = useState<Step[]>([]);
-  const [currentStep, setCurrentStep] = useState(-1);
+  const [stepsStateDummy, setSteps] = useState<Step[]>([]); // remove unused
+  const [currentStep, setCurrentStep] = useState(() => {
+    const s = sessionStorage.getItem('av_currentStep');
+    return s ? parseInt(s, 10) : -1;
+  });
   const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(600);
+  const [speed, setSpeed] = useState(() => {
+    const s = sessionStorage.getItem('av_speed');
+    return s ? parseInt(s, 10) : 600;
+  });
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    sessionStorage.setItem('av_data', JSON.stringify(data));
+    sessionStorage.setItem('av_sortAlgo', sortAlgo);
+    sessionStorage.setItem('av_searchAlgo', searchAlgo);
+    sessionStorage.setItem('av_language', language);
+    sessionStorage.setItem('av_searchTarget', searchTarget);
+    sessionStorage.setItem('av_currentStep', currentStep.toString());
+    sessionStorage.setItem('av_speed', speed.toString());
+  }, [data, sortAlgo, searchAlgo, language, searchTarget, currentStep, speed]);
 
   const activeAlgo = sortAlgo || searchAlgo;
   const algoInfo = activeAlgo ? ALGO_INFO[activeAlgo] : null;
+
+  const steps = React.useMemo(() => {
+    if (!activeAlgo) return [];
+    if (sortAlgo === 'Bubble Sort') return generateBubbleSortSteps(data);
+    else if (sortAlgo === 'Selection Sort') return generateSelectionSortSteps(data);
+    else if (sortAlgo === 'Insertion Sort') return generateInsertionSortSteps(data);
+    else if (sortAlgo === 'Merge Sort') return generateMergeSortSteps(data);
+    else if (sortAlgo === 'Quick Sort') return generateQuickSortSteps(data);
+    else if (searchAlgo === 'Linear Search') return generateLinearSearchSteps(data, parseInt(searchTarget) || 0);
+    else if (searchAlgo === 'Binary Search') return generateBinarySearchSteps(data, parseInt(searchTarget) || 0);
+    return [];
+  }, [activeAlgo, sortAlgo, searchAlgo, data, searchTarget]);
 
   const codeToShow = SNIPPETS[activeAlgo]?.[language]
     || '// Select an algorithm above\n// to view its code here.';
@@ -116,29 +153,10 @@ const ArrayVisualizer: React.FC = () => {
     setIsPlaying(false);
   }
 
-  function generateSteps() {
-    stopPlayback();
-    setCurrentStep(-1);
-    if (!activeAlgo) return;
-    let s: Step[] = [];
-    if (sortAlgo === 'Bubble Sort') s = generateBubbleSortSteps(data);
-    else if (sortAlgo === 'Selection Sort') s = generateSelectionSortSteps(data);
-    else if (sortAlgo === 'Insertion Sort') s = generateInsertionSortSteps(data);
-    else if (sortAlgo === 'Merge Sort') s = generateMergeSortSteps(data);
-    else if (sortAlgo === 'Quick Sort') s = generateQuickSortSteps(data);
-    else if (searchAlgo === 'Linear Search') s = generateLinearSearchSteps(data, parseInt(searchTarget) || 0);
-    else if (searchAlgo === 'Binary Search') s = generateBinarySearchSteps(data, parseInt(searchTarget) || 0);
-    setSteps(s);
-    return s;
-  }
-
   function handlePlay() {
     let s = steps;
-    if (steps.length === 0 || currentStep >= steps.length - 1) {
-      const fresh = generateSteps();
-      if (!fresh || fresh.length === 0) return;
-      s = fresh;
-      setSteps(s);
+    if (s.length === 0) return;
+    if (currentStep >= s.length - 1) {
       setCurrentStep(0);
       setIsPlaying(true);
       let idx = 0;
@@ -151,7 +169,8 @@ const ArrayVisualizer: React.FC = () => {
       return;
     }
     setIsPlaying(true);
-    let idx = currentStep;
+    let idx = currentStep < 0 ? 0 : currentStep;
+    setCurrentStep(idx);
     const id = setInterval(() => {
       idx++;
       if (idx >= s.length) { clearInterval(id); setIsPlaying(false); setCurrentStep(s.length - 1); return; }
@@ -165,16 +184,17 @@ const ArrayVisualizer: React.FC = () => {
   function handleReset() {
     stopPlayback();
     setCurrentStep(-1);
-    setSteps([]);
   }
 
   function handleStepForward() {
-    if (steps.length === 0) { const s = generateSteps(); if (s && s.length > 0) { setSteps(s); setCurrentStep(0); } return; }
+    if (steps.length === 0) return;
+    if (currentStep < 0) { setCurrentStep(0); return; }
     if (currentStep < steps.length - 1) setCurrentStep(c => c + 1);
   }
 
   function handleStepBack() {
     if (currentStep > 0) setCurrentStep(c => c - 1);
+    else if (currentStep === 0) setCurrentStep(-1);
   }
 
   useEffect(() => { return () => stopPlayback(); }, []);
