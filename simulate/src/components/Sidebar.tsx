@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSimulation } from '../hooks/useSimulation';
+import { useLanguage } from '../hooks/useLanguage';
 
 const ALGORITHMS = [
   // ── Core algorithms ──────────────────────────────────────────
@@ -76,6 +77,7 @@ const ALGORITHMS = [
 ];
 
 export default function Sidebar() {
+  const { t } = useLanguage();
   const {
     processes, setProcesses, currentProcesses,
     selectedAlgo, setSelectedAlgo,
@@ -135,13 +137,13 @@ export default function Sidebar() {
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             style={{
               padding: '12px 16px',
-              border: '1px solid #E2E8F0',
+              border: '1px solid var(--border-color)',
               borderRadius: '8px',
               cursor: 'pointer',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              backgroundColor: '#fff',
+              backgroundColor: 'var(--card-bg)',
               fontSize: '14px',
               fontWeight: 500,
               boxShadow: isDropdownOpen ? '0 0 0 2px rgba(59, 130, 246, 0.2)' : 'none',
@@ -149,7 +151,7 @@ export default function Sidebar() {
               transition: 'all 0.2s'
             }}
           >
-            <span style={{ color: selectedAlgo ? '#1E293B' : '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ color: selectedAlgo ? 'var(--text-primary)' : 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {selectedAlgo || "Choose your Algorithm"}
             </span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0, marginLeft: '12px', color: '#94A3B8' }}>
@@ -166,8 +168,8 @@ export default function Sidebar() {
                 left: 0,
                 right: 0,
                 marginTop: '8px',
-                backgroundColor: '#fff',
-                border: '1px solid #E2E8F0',
+                backgroundColor: 'var(--card-bg)',
+                border: '1px solid var(--border-color)',
                 borderRadius: '8px',
                 boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
                 zIndex: 50,
@@ -183,7 +185,7 @@ export default function Sidebar() {
                     padding: '12px 16px',
                     cursor: 'pointer',
                     backgroundColor: selectedAlgo === algo ? '#EFF6FF' : 'transparent',
-                    color: selectedAlgo === algo ? '#2563EB' : '#1E293B',
+                    color: selectedAlgo === algo ? 'var(--primary-blue)' : 'var(--text-primary)',
                     fontSize: '14px',
                     fontWeight: selectedAlgo === algo ? 600 : 400,
                     transition: 'background-color 0.15s ease'
@@ -197,7 +199,7 @@ export default function Sidebar() {
             </div>
           )}
         </div>
-        <p className="logic-desc" style={{ fontSize: '13px', color: '#64748B', lineHeight: '1.5' }}>
+        <p className="logic-desc" style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
           {selectedAlgo === "First Come First Served (FCFS)" && "Jobs are processed in the order they enter the ready queue. Simple, non-preemptive."}
           {selectedAlgo === "Shortest Job First (SJF)" && "Selects the waiting process with the smallest execution time."}
           {selectedAlgo === "Shortest Processing Time (SPT)" && "Prioritizes processes with the shortest total processing requirement."}
@@ -217,13 +219,13 @@ export default function Sidebar() {
 
         {(selectedAlgo?.includes("Round Robin") || selectedAlgo === "Deficit Round Robin (DRR)") && (
           <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <label style={{ fontSize: '13px', fontWeight: 600, color: '#64748B' }}>Time Quantum:</label>
+            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>Time Quantum:</label>
             <input
               type="number"
               min="1"
               value={quantum}
               onChange={(e) => setQuantum(Math.max(1, parseInt(e.target.value) || 1))}
-              style={{ width: '64px', padding: '8px', border: '1px solid #E2E8F0', borderRadius: '6px', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}
+              style={{ width: '64px', padding: '8px', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', fontWeight: 600, textAlign: 'center', backgroundColor: 'var(--bg-color)', color: 'var(--text-primary)' }}
             />
           </div>
         )}
@@ -241,114 +243,187 @@ export default function Sidebar() {
         <div className="process-table">
           <div className="header-row" style={{ 
             display: 'grid',
-            gridTemplateColumns: selectedAlgo?.includes('Priority') ? '40px 1fr 1fr 45px 1fr 1.2fr 30px' : '45px 1.2fr 1.2fr 1fr 1.5fr 30px',
-            gap: '8px',
-            paddingRight: '8px',
-            borderBottom: '1px solid #F1F5F9',
-            paddingBottom: '8px'
+            gridTemplateColumns: '32px 55px 55px 70px 50px 1fr 28px',
+            gap: '6px',
+            padding: '0 4px 8px 0',
+            borderBottom: '1px solid var(--border-color)',
+            fontSize: '11px',
+            fontWeight: 700,
+            color: 'var(--text-tertiary)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
           }}>
-            <div style={{ textAlign: 'left' }}>PID</div>
-            <div style={{ textAlign: 'center' }}>Arrival</div>
-            <div style={{ textAlign: 'center' }}>Burst</div>
-            {selectedAlgo?.includes('Priority') && <div style={{ textAlign: 'center' }}>Pri</div>}
-            <div style={{ textAlign: 'center' }}>Wait</div>
-            <div style={{ textAlign: 'right', paddingRight: '4px' }}>Status</div>
+            <div style={{ textAlign: 'left' }}>{t('sidebar.pid')}</div>
+            <div style={{ textAlign: 'center' }}>{t('sidebar.arrival')}</div>
+            <div style={{ textAlign: 'center' }}>{t('sidebar.burst')}</div>
+            <div style={{ textAlign: 'center' }}>{t('sidebar.priority')}</div>
+            <div style={{ textAlign: 'center' }}>{t('sidebar.wait')}</div>
+            <div style={{ textAlign: 'right' }}>{t('sidebar.status')}</div>
             <div></div>
           </div>
           
-          <div className="process-list hide-scrollbar" style={{ maxHeight: '280px', overflowY: 'auto', paddingRight: '4px', marginTop: '8px' }}>
+          <div className="process-list hide-scrollbar" style={{ maxHeight: '320px', overflowY: 'auto', paddingRight: '4px', marginTop: '8px' }}>
             {currentProcesses.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '20px', color: '#94A3B8', fontSize: '13px' }}>
-                No processes added. Click Add or Random.
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-tertiary)', fontSize: '13px' }}>
+                {t('sidebar.no_processes')}
               </div>
             ) : currentProcesses.map((p: any, idx: number) => {
               const statusClass = `status-${(p.status || 'new').toLowerCase()}`;
               const colors = [
-                '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6',
-                '#EC4899', '#06B6D4', '#F97316', '#14B8A6',
-                '#6366F1', '#D946EF'
+                'var(--p1-color)', 'var(--p2-color)', 'var(--p3-color)', 'var(--p4-color)',
+                'var(--p5-color)', 'var(--p6-color)', 'var(--p7-color)', 'var(--p8-color)',
+                'var(--p9-color)', 'var(--p10-color)'
               ];
               const color = colors[idx % 10];
+              const hasPriority = selectedAlgo?.includes('Priority') || selectedAlgo?.includes('PQ') || selectedAlgo === 'MUF' || selectedAlgo === 'EDF';
 
               return (
                 <div className="process-row" key={p.id} style={{ 
                   display: 'grid',
-                  gridTemplateColumns: selectedAlgo?.includes('Priority') ? '40px 1fr 1fr 45px 1fr 1.2fr 30px' : '45px 1.2fr 1.2fr 1fr 1.5fr 30px',
-                  gap: '8px',
-                  padding: '8px 0',
-                  alignItems: 'center'
+                  gridTemplateColumns: '32px 55px 55px 70px 50px 1fr 28px',
+                  gap: '6px',
+                  padding: '10px 0',
+                  alignItems: 'center',
+                  borderBottom: '1px solid var(--bg-color)'
                 }}>
-                  <div style={{ color, fontWeight: 700 }}>P{p.id}</div>
+                  <div style={{ color, fontWeight: 800, fontSize: '14px' }}>P{p.id}</div>
+                  
                   <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    <input
-                      type="number"
-                      min="0"
-                      value={p.arrival}
-                      onChange={(e) => handleUpdate(p.id, 'arrival', Math.max(0, parseInt(e.target.value) || 0))}
-                      style={{ width: '100%', maxWidth: '45px', border: '1px solid transparent', backgroundColor: '#F8FAFC', borderRadius: '6px', padding: '4px', fontSize: '13px', textAlign: 'center' }}
-                    />
+                    {status === 'idle' ? (
+                      <input
+                        type="number"
+                        min="0"
+                        value={p.arrival}
+                        onChange={(e) => handleUpdate(p.id, 'arrival', Math.max(0, parseInt(e.target.value) || 0))}
+                        style={{ 
+                          width: '100%', 
+                          border: '1px solid var(--border-color)', 
+                          backgroundColor: 'var(--bg-color)', 
+                          color: 'var(--text-primary)', 
+                          borderRadius: '6px', 
+                          padding: '6px 2px', 
+                          fontSize: '13px', 
+                          textAlign: 'center',
+                          fontWeight: 600
+                        }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{p.arrival}ms</span>
+                    )}
                   </div>
+                  
                   <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    <input
-                      type="number"
-                      min="1"
-                      value={p.burst}
-                      onChange={(e) => handleUpdate(p.id, 'burst', Math.max(1, parseInt(e.target.value) || 1))}
-                      style={{ width: '100%', maxWidth: '45px', border: '1px solid transparent', backgroundColor: '#F8FAFC', borderRadius: '6px', padding: '4px', fontSize: '13px', textAlign: 'center' }}
-                    />
+                    {status === 'idle' ? (
+                      <input
+                        type="number"
+                        min="1"
+                        value={p.burst}
+                        onChange={(e) => handleUpdate(p.id, 'burst', Math.max(1, parseInt(e.target.value) || 1))}
+                        style={{ 
+                          width: '100%', 
+                          maxWidth: '50px', 
+                          border: '1px solid var(--border-color)', 
+                          backgroundColor: 'var(--bg-color)', 
+                          color: 'var(--text-primary)', 
+                          borderRadius: '6px', 
+                          padding: '6px 4px', 
+                          fontSize: '13px', 
+                          textAlign: 'center',
+                          fontWeight: 600
+                        }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{p.burst}ms</span>
+                    )}
                   </div>
-                  {selectedAlgo?.includes('Priority') && (
-                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    {status === 'idle' ? (
                       <input
                         type="number"
                         min="1"
                         value={p.priority || 1}
+                        disabled={!hasPriority}
                         onChange={(e) => handleUpdate(p.id, 'priority', Math.max(1, parseInt(e.target.value) || 1))}
-                        style={{ width: '100%', maxWidth: '38px', border: '1px solid transparent', backgroundColor: '#F8FAFC', borderRadius: '6px', padding: '4px', fontSize: '13px', textAlign: 'center', fontWeight: 700 }}
+                        style={{ 
+                          width: '100%', 
+                          maxWidth: '50px', 
+                          border: '1px solid var(--border-color)', 
+                          backgroundColor: hasPriority ? 'var(--bg-color)' : 'transparent', 
+                          color: hasPriority ? 'var(--text-primary)' : 'transparent', 
+                          borderRadius: '6px', 
+                          padding: '6px 4px', 
+                          fontSize: '13px', 
+                          textAlign: 'center', 
+                          fontWeight: 700,
+                          opacity: hasPriority ? 1 : 0,
+                          pointerEvents: hasPriority ? 'auto' : 'none'
+                        }}
                       />
-                    </div>
-                  )}
-                  <div style={{ color: '#64748B', fontSize: '12px', textAlign: 'center' }}>{(p.wait || 0)}ms</div>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <div className={`status-badge ${statusClass}`} style={{ padding: '2px 8px', fontSize: '9px', borderRadius: '4px' }}>{p.status || 'NEW'}</div>
+                    ) : (
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: hasPriority ? 'var(--text-primary)' : 'transparent', opacity: hasPriority ? 1 : 0 }}>
+                        {p.priority || 1}
+                      </span>
+                    )}
                   </div>
-                  <button
-                    onClick={() => handleDelete(p.id)}
-                    style={{ background: 'none', border: 'none', color: '#CBD5E1', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = '#EF4444'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = '#CBD5E1'}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2 2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                  </button>
+                  
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '12px', textAlign: 'center', fontWeight: 500 }}>
+                    {(p.wait || 0)}ms
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div className={`status-badge ${statusClass}`} style={{ padding: '4px 10px', fontSize: '10px', borderRadius: '6px', fontWeight: 700 }}>
+                      {p.status || 'NEW'}
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => handleDelete(p.id)}
+                      disabled={status !== 'idle'}
+                      style={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        color: status === 'idle' ? 'var(--text-tertiary)' : 'transparent', 
+                        cursor: status === 'idle' ? 'pointer' : 'default', 
+                        padding: '6px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        transition: 'color 0.2s',
+                        pointerEvents: status === 'idle' ? 'auto' : 'none'
+                      }}
+                      onMouseEnter={(e) => { if (status === 'idle') e.currentTarget.style.color = '#EF4444'; }}
+                      onMouseLeave={(e) => { if (status === 'idle') e.currentTarget.style.color = 'var(--text-tertiary)'; }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2 2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
                 </div>
               );
             })}
           </div>
         </div>
 
-        <div className="playback-controls" style={{ margin: '24px 0 16px', background: '#F8FAFC', padding: '10px', borderRadius: '12px' }}>
-          <button className="play-btn" onClick={stepBackward}>
+        <div className="playback-controls" style={{ margin: '24px 0 16px', background: 'var(--bg-color)', padding: '10px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+          <button className="play-btn" onClick={stepBackward} style={{ color: 'var(--text-primary)' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
           </button>
-          <button className="play-btn" style={{ background: '#fff', border: '1px solid #E2E8F0', width: '36px', height: '36px' }} onClick={status === 'running' ? pause : play}>
+          <button className="play-btn" style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '36px', height: '36px' }} onClick={status === 'running' ? pause : play}>
             {status === 'running' ? (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
             ) : (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             )}
           </button>
-          <button className="play-btn" style={{ background: '#fff', border: '1px solid #E2E8F0', width: '36px', height: '36px' }} onClick={reset}>
+          <button className="play-btn" style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', width: '36px', height: '36px' }} onClick={reset}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
           </button>
-          <button className="play-btn" onClick={stepForward}>
+          <button className="play-btn" onClick={stepForward} style={{ color: 'var(--text-primary)' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
           </button>
         </div>
 
-        <div className="action-buttons" style={{ gap: '10px' }}>
-          <button className="btn btn-primary" style={{ flex: 1.5, height: '42px' }} onClick={runSimulation}>Run Simulation</button>
-          <button className="btn btn-outline" style={{ flex: 1, height: '42px' }} onClick={reset}>Reset</button>
-        </div>
       </div>
     </aside>
   );

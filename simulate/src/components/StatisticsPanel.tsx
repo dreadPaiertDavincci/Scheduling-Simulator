@@ -1,8 +1,10 @@
 import React from 'react';
 import { useSimulation } from '../hooks/useSimulation';
+import { useLanguage } from '../hooks/useLanguage';
 import './StatisticsPanel.css';
 
 export default function StatisticsPanel() {
+  const { t } = useLanguage();
   const { result, processes } = useSimulation();
 
   const stats = result?.processStats || [];
@@ -37,7 +39,7 @@ export default function StatisticsPanel() {
                 </div>
                );
             })}
-            {stats.length === 0 && <div style={{ padding: '20px', textAlign: 'center', color: '#94A3B8' }}>No data available. Run simulation first.</div>}
+            {stats.length === 0 && <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-tertiary)' }}>No data available. Run simulation first.</div>}
           </div>
         </div>
 
@@ -45,27 +47,24 @@ export default function StatisticsPanel() {
         <div style={{ display: 'flex', gap: '24px' }}>
            {/* Summary Stats */}
            <div className="card stat-card" style={{ flex: 3, padding: '24px' }}>
-              <div className="stat-header">SUMMARY STATISTICS</div>
+              <div className="stat-header">{t('stats.header')}</div>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                <div className="stat-item" style={{ marginBottom: 0 }}>
-                  <div className="stat-val">{avgWait} <span>MS</span></div>
-                  <div className="stat-lbl">Avg Waiting Time</div>
+                <div className="stat-card">
+                  <div className="stat-label">{t('stats.avg_wait')}</div>
+                  <div className="stat-value">{avgWait}<span>ms</span></div>
                 </div>
-                
-                <div className="stat-item" style={{ marginBottom: 0 }}>
-                  <div className="stat-val">{avgTAT} <span>MS</span></div>
-                  <div className="stat-lbl">Avg Turnaround</div>
+                <div className="stat-card">
+                  <div className="stat-label">{t('stats.avg_turnaround')}</div>
+                  <div className="stat-value">{avgTAT}<span>ms</span></div>
                 </div>
-                
-                <div className="stat-item" style={{ marginBottom: 0 }}>
-                  <div className="stat-val" style={{ color: '#10B981' }}>{cpuUtil} <span>%</span></div>
-                  <div className="stat-lbl">CPU Utilization</div>
+                <div className="stat-card">
+                  <div className="stat-label">{t('stats.avg_response')}</div>
+                  <div className="stat-value">{avgResp}<span>ms</span></div>
                 </div>
-                
-                <div className="stat-item" style={{ marginBottom: 0 }}>
-                  <div className="stat-val">{avgResp} <span>MS</span></div>
-                  <div className="stat-lbl">Avg Response Time</div>
+                <div className="stat-card">
+                  <div className="stat-label">{t('stats.cpu_utilization')}</div>
+                  <div className="stat-value">{cpuUtil}<span>%</span></div>
                 </div>
               </div>
            </div>

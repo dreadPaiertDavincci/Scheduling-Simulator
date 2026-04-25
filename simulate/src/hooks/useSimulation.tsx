@@ -30,13 +30,63 @@ interface SimulationContextType {
 const SimulationContext = createContext<SimulationContextType | undefined>(undefined);
 
 export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentTime, setCurrentTime] = useState(0);
-  const [status, setStatus] = useState<SimulationStatus>('idle');
-  const [processes, setProcesses] = useState<Process[]>([]);
-  const [selectedAlgo, setSelectedAlgo] = useState('');
-  const [quantum, setQuantum] = useState(2);
-  const [result, setResult] = useState<{ steps: SimulationStep[], processStats: ProcessStats[] } | null>(null);
+  const [currentTime, setCurrentTime] = useState(() => {
+    const saved = sessionStorage.getItem('sim_time');
+    return saved ? parseInt(saved) : 0;
+  });
   
+  const [status, setStatus] = useState<SimulationStatus>(() => {
+    return (sessionStorage.getItem('sim_status') as SimulationStatus) || 'idle';
+  });
+  
+  const [processes, setProcesses] = useState<Process[]>(() => {
+    const saved = sessionStorage.getItem('sim_processes');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedAlgo, setSelectedAlgo] = useState(() => {
+    return sessionStorage.getItem('sim_algo') || '';
+  });
+  
+  const [quantum, setQuantum] = useState(() => {
+    const saved = sessionStorage.getItem('sim_quantum');
+    return saved ? parseInt(saved) : 2;
+  });
+
+  const [result, setResult] = useState<{ steps: SimulationStep[], processStats: ProcessStats[] } | null>(() => {
+    const saved = sessionStorage.getItem('sim_result');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  // Persistence Effects
+  useEffect(() => {
+    sessionStorage.setItem('sim_time', currentTime.toString());
+  }, [currentTime]);
+
+  useEffect(() => {
+    sessionStorage.setItem('sim_status', status);
+  }, [status]);
+
+  useEffect(() => {
+    sessionStorage.setItem('sim_processes', JSON.stringify(processes));
+  }, [processes]);
+
+  useEffect(() => {
+    sessionStorage.setItem('sim_algo', selectedAlgo);
+  }, [selectedAlgo]);
+
+  useEffect(() => {
+    sessionStorage.setItem('sim_quantum', quantum.toString());
+  }, [quantum]);
+
+  useEffect(() => {
+    if (result) {
+      sessionStorage.setItem('sim_result', JSON.stringify(result));
+    } else {
+      sessionStorage.removeItem('sim_result');
+    }
+  }, [result]);
+
   const timerRef = useRef<number | null>(null);
 
   const runSimulation = useCallback(() => {
@@ -72,7 +122,6 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       case "Longest Remaining Time First (LRTF)":
         res = lrtf(processes);
         break;
-      // ── New algorithms ──────────────────────────────────────
       case "Priority Round Robin (Priority RR)":
         res = priorityRR(processes, quantum);
         break;
@@ -104,13 +153,13 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         res = drr(processes, quantum);
         break;
       default:
-        res = fcfs(processes); // Fallback
+        res = fcfs(processes);
     }
     
     setResult(res);
     setCurrentTime(0);
     setStatus('paused');
-  }, [processes, selectedAlgo]);
+  }, [processes, selectedAlgo, quantum]);
 
   const play = useCallback(() => {
     if (!result) runSimulation();
@@ -149,17 +198,30 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           }
           return prev + 1;
         });
-      }, 500); // 500ms per step
+      }, 500);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [status, result]);
   
-  // Auto-reset simulation when processes, algorithm or quantum change
+  // Use a ref to store initial values to avoid unnecessary reset on mount (especially for Strict Mode)
+  const initialParamsRef = useRef({ processes, selectedAlgo, quantum });
+  
   useEffect(() => {
+    // Skip reset if the values are identical to the ones we initialized with
+    if (
+      JSON.stringify(initialParamsRef.current.processes) === JSON.stringify(processes) &&
+      initialParamsRef.current.selectedAlgo === selectedAlgo &&
+      initialParamsRef.current.quantum === quantum
+    ) {
+      return;
+    }
+    
+    // Once they differ, we reset and update the ref to track further changes
     reset();
-  }, [processes, selectedAlgo, quantum]);
+    initialParamsRef.current = { processes, selectedAlgo, quantum };
+  }, [processes, selectedAlgo, quantum, reset]);
 
   // Derive Current State
   const currentStep = result && currentTime > 0 ? result.steps[currentTime - 1] : null;

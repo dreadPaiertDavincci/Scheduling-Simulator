@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useSimulation } from '../hooks/useSimulation';
+import { useLanguage } from '../hooks/useLanguage';
 
 export function TimelineArea() {
+  const { t } = useLanguage();
   const {
     processes, result, currentTime,
     currentStep, readyQueue, eventLog
@@ -135,19 +137,17 @@ export function TimelineArea() {
       <div className="card">
         <div className="timeline-header">
           <div className="timeline-title">
-            <div className="timeline-title-sub">EXECUTION TIMELINE</div>
-            <h2>Discrete Time Grid</h2>
+            <span className="dot"></span> {t('timeline.execution')}
           </div>
-
-          <div className="status-legend">
+          <div className="timeline-legend">
             <div className="legend-item">
-              <div className="legend-dot running"></div> RUNNING
+              <div className="legend-color" style={{ backgroundColor: 'var(--p1-color)' }}></div> {t('timeline.running')}
             </div>
             <div className="legend-item">
-              <div className="legend-square"></div> IDLE
+              <div className="legend-color" style={{ border: '1px solid var(--border-color)', backgroundColor: 'transparent' }}></div> {t('timeline.idle')}
             </div>
             <div className="legend-item">
-              <div className="legend-line"></div> CONTEXT SWITCH
+              <div className="legend-line"></div> {t('timeline.context_switch')}
             </div>
           </div>
         </div>
@@ -203,10 +203,10 @@ export function TimelineArea() {
         </div>
       </div>
 
-      <div className="bottom-panels" style={{ display: 'flex', gap: '48px', alignItems: 'center', backgroundColor: '#FFFFFF', padding: '32px 40px', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '24px' }}>
+      <div className="bottom-panels" style={{ display: 'flex', gap: '48px', alignItems: 'center', backgroundColor: 'var(--card-bg)', padding: '32px 40px', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '24px' }}>
         {/* Ready Queue */}
         <div style={{ flex: 1 }}>
-          <div className="timeline-title-sub" style={{ color: '#94A3B8', marginBottom: '16px', letterSpacing: '1px' }}>READY QUEUE</div>
+          <div className="timeline-title-sub" style={{ color: 'var(--text-tertiary)', marginBottom: '16px', letterSpacing: '1px' }}>{t('timeline.ready_queue')}</div>
           <div className="ready-queue-items" style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
             {readyQueue.map((p, i) => (
               <div
@@ -214,7 +214,7 @@ export function TimelineArea() {
                 className={`queue-item ${i === 0 ? 'next' : ''}`}
                 style={{
                   minWidth: '56px', height: '56px', borderRadius: '12px',
-                  border: i === 0 ? `2px solid ${getProcessColor(p.id)}` : '1px solid #E2E8F0',
+                  border: i === 0 ? `2px solid ${getProcessColor(p.id)}` : '1px solid var(--border-color)',
                   color: getProcessColor(p.id),
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '16px', fontWeight: 700, position: 'relative',
@@ -236,21 +236,21 @@ export function TimelineArea() {
         </div>
 
         {/* Currently Running */}
-        <div className="running-box" style={{ flex: 1.5, backgroundColor: '#F8FAFC', padding: '24px 32px', borderRadius: '12px', border: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="running-box" style={{ flex: 1.5, backgroundColor: 'var(--bg-color)', padding: '24px 32px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {currentStep?.type === 'running' ? (
             <>
               <div>
-                <div className="timeline-title-sub" style={{ color: '#94A3B8', marginBottom: '8px', letterSpacing: '1px' }}>CURRENTLY RUNNING</div>
+                <div className="timeline-title-sub" style={{ color: 'var(--text-tertiary)', marginBottom: '8px', letterSpacing: '1px' }}>{t('timeline.currently_running')}</div>
                 <div className="running-proc" style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: getProcessColor(currentStep.processId) }}>Process P{currentStep.processId}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div className="timeline-title-sub" style={{ color: '#94A3B8', marginBottom: '8px', letterSpacing: '1px' }}>REMAINING</div>
+                <div className="timeline-title-sub" style={{ color: 'var(--text-tertiary)', marginBottom: '8px', letterSpacing: '1px' }}>{t('timeline.remaining')}</div>
                 <div className="running-rem" style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: '#1E293B' }}>{currentStep.remainingBurst}ms</div>
               </div>
             </>
           ) : (
             <div style={{ width: '100%', textAlign: 'center', color: '#94A3B8', fontWeight: 500 }}>
-              {currentStep?.type === 'idle' ? 'CPU IDLE' : 'NO ACTIVE SIMULATION'}
+              {currentStep?.type === 'idle' ? t('timeline.cpu_idle') : t('timeline.no_simulation')}
             </div>
           )}
         </div>
