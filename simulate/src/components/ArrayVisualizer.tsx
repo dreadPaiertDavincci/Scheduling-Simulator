@@ -64,6 +64,16 @@ const SNIPPETS: Record<string, Record<string, string>> = {
   }
 };
 
+const ALGO_COLORS: Record<string, { background: string; color: string; borderColor: string }> = {
+  'Bubble Sort': { background: '#FEF3C7', color: '#92400E', borderColor: '#FCD34D' },
+  'Selection Sort': { background: '#DBEAFE', color: '#1E3A8A', borderColor: '#93C5FD' },
+  'Insertion Sort': { background: '#EDE9FE', color: '#4C1D95', borderColor: '#C4B5FD' },
+  'Merge Sort': { background: '#D1FAE5', color: '#064E3B', borderColor: '#6EE7B7' },
+  'Quick Sort': { background: '#FCE7F3', color: '#831843', borderColor: '#F9A8D4' },
+  'Linear Search': { background: '#FFEDD5', color: '#9A3412', borderColor: '#FDBA74' },
+  'Binary Search': { background: '#DCFCE7', color: '#14532D', borderColor: '#86EFAC' },
+};
+
 const COLOR_MAP: Record<StepType, string> = {
   compare: '#FBBF24', swap: '#EF4444', sorted: '#10B981',
   active: '#6366F1', found: '#10B981', pivot: '#F59E0B',
@@ -250,12 +260,12 @@ const ArrayVisualizer: React.FC = () => {
 
         <div className="av-section">
           <h3 className="av-section-title">Sorting Algorithms</h3>
-          <select className="av-select" value={sortAlgo} onChange={handleSortChange}>
+          <select className="av-select" style={sortAlgo ? ALGO_COLORS[sortAlgo] : {}} value={sortAlgo} onChange={handleSortChange}>
             <option value="" disabled>Select Algorithm...</option>
             {SORTING_ALGOS.map(a => <option key={a}>{a}</option>)}
           </select>
           <h3 className="av-section-title">Searching Algorithms</h3>
-          <select className="av-select" value={searchAlgo} onChange={handleSearchChange}>
+          <select className="av-select" style={searchAlgo ? ALGO_COLORS[searchAlgo] : {}} value={searchAlgo} onChange={handleSearchChange}>
             <option value="" disabled>Select Algorithm...</option>
             {SEARCHING_ALGOS.map(a => <option key={a}>{a}</option>)}
           </select>
