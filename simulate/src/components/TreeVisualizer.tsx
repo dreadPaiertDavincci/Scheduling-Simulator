@@ -24,8 +24,16 @@ interface Props {
 
 const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
   // ── State ───────────────────────────────────────
-  const [tree, setTree] = useState<Tree>(() => createDefaultBST());
-  const [activeAlgo, setActiveAlgo] = useState<TreeAlgoId>('preorder');
+  const [tree, setTree] = useState<Tree>(() => {
+    const saved = sessionStorage.getItem('tv-tree-data');
+    return saved ? JSON.parse(saved) : createDefaultBST();
+  });
+
+  const [activeAlgo, setActiveAlgo] = useState<TreeAlgoId>(() => {
+    const saved = sessionStorage.getItem('tv-active-algo');
+    return (saved as TreeAlgoId) || 'preorder';
+  });
+
   const [steps, setSteps] = useState<TreeStep[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -36,6 +44,15 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
   const [targetSide, setTargetSide] = useState<'left' | 'right'>('left');
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [draggingNode, setDraggingNode] = useState<string | null>(null);
+
+  // ── Persistence ─────────────────────────────────
+  useEffect(() => {
+    sessionStorage.setItem('tv-tree-data', JSON.stringify(tree));
+  }, [tree]);
+
+  useEffect(() => {
+    sessionStorage.setItem('tv-active-algo', activeAlgo);
+  }, [activeAlgo]);
 
   const timerRef = useRef<any>(null);
   const svgRef = useRef<SVGSVGElement>(null);

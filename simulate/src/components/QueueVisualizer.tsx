@@ -156,7 +156,7 @@ const QueueVisualizer: React.FC<Props> = ({ onBack }) => {
   const handleEnqueue = () => {
     const val = parseInt(inputValue);
     if (isNaN(val)) return;
-    if (data.length >= 10) return;
+    if (data.length >= 7) return;
 
     const oldData = [...data];
     setData([...oldData, val]);
@@ -198,7 +198,7 @@ const QueueVisualizer: React.FC<Props> = ({ onBack }) => {
     stopPlayback();
     const count = Math.floor(Math.random() * 3) + 4;
     const newVals = Array.from({ length: count }, () => Math.floor(Math.random() * 90) + 10);
-    
+
     // We update state at the END of the animation, but for the steps we need old data
     const oldData = [...data];
     setData(newVals);
@@ -303,7 +303,7 @@ const QueueVisualizer: React.FC<Props> = ({ onBack }) => {
         <div className="queue-state-info">
           <div className="queue-state-row">
             <span className="queue-state-label">Current Size</span>
-            <span className="queue-state-value size">{data.length} / 10</span>
+            <span className="queue-state-value size">{data.length} / 7</span>
           </div>
           <div className="queue-state-row">
             <span className="queue-state-label">Front Node</span>
@@ -418,7 +418,7 @@ const QueueVisualizer: React.FC<Props> = ({ onBack }) => {
                 <div
                   key={i}
                   className="queue-log-item"
-                  style={{ 
+                  style={{
                     opacity: i === currentStep ? 1 : 0.6,
                     transform: i === currentStep ? 'scale(1)' : 'scale(0.98)',
                     borderLeftColor: i === currentStep ? 'var(--q-primary)' : 'var(--q-border)'
