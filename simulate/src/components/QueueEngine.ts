@@ -47,7 +47,7 @@ export function generateEnqueueSteps(data: number[], val: number): QueueStep[] {
   // Step 1 — show current state
   steps.push({
     queue: [...base],
-    description: `Enqueue ${val}: Preparing to insert at the REAR of the queue.`,
+    description: `Enqueue ${val}: Initializing insertion at the REAR pointer.`,
     operation: 'Enqueue',
     highlightRear: true,
   });
@@ -56,7 +56,7 @@ export function generateEnqueueSteps(data: number[], val: number): QueueStep[] {
   const entering: QueueNode = { id: `new_${Date.now()}`, value: val, state: 'active' };
   steps.push({
     queue: [...base, entering],
-    description: `Placing ${val} at the REAR position. FRONT pointer unchanged.`,
+    description: `Allocating memory for ${val} and linking it to the current REAR.`,
     operation: 'Enqueue',
     highlightRear: true,
   });
@@ -64,7 +64,7 @@ export function generateEnqueueSteps(data: number[], val: number): QueueStep[] {
   // Step 3 — success
   steps.push({
     queue: [...base, { ...entering, state: 'success' }],
-    description: `Enqueue complete ✓. ${val} is now the new REAR. Size: ${data.length + 1}.`,
+    description: `Enqueue successful. ${val} is now the new REAR. Queue size: ${data.length + 1}.`,
     operation: 'Enqueue',
     highlightRear: true,
   });
@@ -82,7 +82,7 @@ export function generateDequeueSteps(data: number[]): QueueStep[] {
   const step1 = base.map((n, i) => i === 0 ? { ...n, state: 'front' as QueueNodeState } : n);
   steps.push({
     queue: step1,
-    description: `Dequeue: Identifying FRONT element — value is ${data[0]}.`,
+    description: `Dequeue: Locating the element at the FRONT — current value is ${data[0]}.`,
     operation: 'Dequeue',
     highlightFront: true,
   });
@@ -91,7 +91,7 @@ export function generateDequeueSteps(data: number[]): QueueStep[] {
   const step2 = base.map((n, i) => i === 0 ? { ...n, state: 'removing' as QueueNodeState } : n);
   steps.push({
     queue: step2,
-    description: `Removing ${data[0]} from the FRONT. FRONT pointer advances →`,
+    description: `Decoupling ${data[0]} from the head. Advancing the FRONT pointer.`,
     operation: 'Dequeue',
     highlightFront: true,
   });
@@ -100,7 +100,7 @@ export function generateDequeueSteps(data: number[]): QueueStep[] {
   const remaining = base.slice(1);
   steps.push({
     queue: remaining,
-    description: `Dequeue complete ✓. ${data[0]} has left the queue. Size: ${data.length - 1}.`,
+    description: `Dequeue complete. Node ${data[0]} successfully removed. New size: ${data.length - 1}.`,
     operation: 'Dequeue',
     highlightFront: remaining.length > 0,
   });
@@ -114,20 +114,20 @@ export function generatePeekSteps(data: number[]): QueueStep[] {
   const steps: QueueStep[] = [];
   const base = baseNodes(data);
 
-  // Step 1 — highlight front
-  const step1 = base.map((n, i) => i === 0 ? { ...n, state: 'active' as QueueNodeState } : n);
+  // Step 1 — pulsing front
+  const step1 = base.map((n, i) => i === 0 ? { ...n, state: 'front' as QueueNodeState } : n);
   steps.push({
     queue: step1,
-    description: `Peek: Inspecting the FRONT element without removing it.`,
+    description: `Peek: Inspecting the head element without modifying the queue structure.`,
     operation: 'Peek',
     highlightFront: true,
   });
 
-  // Step 2 — show value, highlight
+  // Step 2 — shaking/highlight
   const step2 = base.map((n, i) => i === 0 ? { ...n, state: 'highlight' as QueueNodeState } : n);
   steps.push({
     queue: step2,
-    description: `FRONT value is ${data[0]}. The queue remains unchanged.`,
+    description: `Data access successful: Head value is ${data[0]}. Structure remains intact.`,
     operation: 'Peek',
     highlightFront: true,
   });
@@ -135,7 +135,7 @@ export function generatePeekSteps(data: number[]): QueueStep[] {
   // Step 3 — restore
   steps.push({
     queue: [...base],
-    description: `Peek complete ✓. No elements were modified.`,
+    description: `Peek operation concluded. No changes were made to the FIFO sequence.`,
     operation: 'Peek',
   });
 
@@ -148,17 +148,19 @@ export function generateFrontSteps(data: number[]): QueueStep[] {
   const steps: QueueStep[] = [];
   const base = baseNodes(data);
 
+  // Step 1 — pulsing front
   const step1 = base.map((n, i) => i === 0 ? { ...n, state: 'front' as QueueNodeState } : n);
   steps.push({
     queue: step1,
-    description: `Front: FRONT pointer targets index 0 — value is ${data[0]}.`,
+    description: `Front: Accessing the FRONT pointer reference — targets index 0.`,
     operation: 'Front',
     highlightFront: true,
   });
 
+  // Step 2 — final result
   steps.push({
     queue: [...base],
-    description: `Front operation complete ✓. FRONT = ${data[0]}.`,
+    description: `FRONT pointer points to value ${data[0]}. This is the next element to be dequeued.`,
     operation: 'Front',
   });
 
@@ -172,18 +174,70 @@ export function generateRearSteps(data: number[]): QueueStep[] {
   const base = baseNodes(data);
   const last = data.length - 1;
 
+  // Step 1 — pulsing rear
   const step1 = base.map((n, i) => i === last ? { ...n, state: 'rear' as QueueNodeState } : n);
   steps.push({
     queue: step1,
-    description: `Rear: REAR pointer targets index ${last} — value is ${data[last]}.`,
+    description: `Rear: Accessing the REAR pointer reference — targets index ${last}.`,
     operation: 'Rear',
     highlightRear: true,
   });
 
+  // Step 2 — final result
   steps.push({
     queue: [...base],
-    description: `Rear operation complete ✓. REAR = ${data[last]}.`,
+    description: `REAR pointer points to value ${data[last]}. This is the most recently added element.`,
     operation: 'Rear',
+  });
+
+  return steps;
+}
+
+// ── RANDOM ─────────────────────────────────────────────────────────────────────
+export function generateRandomSteps(oldData: number[], newData: number[]): QueueStep[] {
+  const steps: QueueStep[] = [];
+  
+  // Step 1: Clear current queue
+  if (oldData.length > 0) {
+    const clearingNodes = oldData.map((v, i) => ({ 
+      id: `q_${i}_${v}`, 
+      value: v, 
+      state: 'removing' as QueueNodeState 
+    }));
+    steps.push({
+      queue: clearingNodes,
+      description: 'System Reset: Clearing existing queue structure.',
+      operation: 'Random',
+    });
+  }
+
+  // Step 2: Empty state
+  steps.push({
+    queue: [],
+    description: 'Generating new random dataset...',
+    operation: 'Random',
+  });
+
+  // Step 3: Progressive fill
+  let currentQueue: QueueNode[] = [];
+  newData.forEach((val, i) => {
+    const node: QueueNode = { id: `rnd_${i}_${Date.now()}`, value: val, state: 'active' };
+    
+    // Node entering
+    steps.push({
+      queue: [...currentQueue, node],
+      description: `Populating queue with random value: ${val}.`,
+      operation: 'Random',
+    });
+
+    // Node settled
+    const settledNode = { ...node, state: 'success' as QueueNodeState };
+    currentQueue.push(settledNode);
+    steps.push({
+      queue: [...currentQueue],
+      description: `Random value ${val} successfully indexed at position ${i}.`,
+      operation: 'Random',
+    });
   });
 
   return steps;
