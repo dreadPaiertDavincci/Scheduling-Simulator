@@ -33,6 +33,7 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
   const [inputValue, setInputValue] = useState('');
   const [exprValue, setExprValue] = useState('2 + 3 * 4');
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [targetSide, setTargetSide] = useState<'left' | 'right'>('left');
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [draggingNode, setDraggingNode] = useState<string | null>(null);
 
@@ -53,7 +54,7 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
 
     switch (activeAlgo) {
       case 'preorder': generatedSteps = runPreorder(tree); break;
-      case 'inorder':  generatedSteps = runInorder(tree); break;
+      case 'inorder': generatedSteps = runInorder(tree); break;
       case 'postorder': generatedSteps = runPostorder(tree); break;
       case 'levelorder': generatedSteps = runLevelOrder(tree); break;
       case 'bst-rec':
@@ -161,7 +162,8 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
     resetSimulation();
   };
 
-  const handleAddManualNode = (side: 'left' | 'right') => {
+  const handleAddManualNode = () => {
+    const side = targetSide;
     if (!selectedNode || !inputValue) return;
     const val = isNaN(parseInt(inputValue)) ? inputValue : parseInt(inputValue);
     const newId = `m-${Math.random().toString(36).slice(2, 7)}`;
@@ -281,8 +283,19 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
 
     return nodesToRender.map(node => {
       const state = nodeStates[node.id] || 'default';
-      const isTrieNode = 'char' in node;
       const isSelected = selectedNode === node.id;
+
+      let relClass = '';
+      if (selectedNode && !isSelected) {
+        const sel = tree.nodes[selectedNode];
+        // Parent check
+        if (sel.left === node.id || sel.right === node.id) relClass = 'child';
+        // Children check
+        const parent = Object.values(tree.nodes).find(n => n.left === selectedNode || n.right === selectedNode);
+        if (parent?.id === node.id) relClass = 'parent';
+        // Sibling check
+        if (parent && (parent.left === node.id || parent.right === node.id)) relClass = 'sibling';
+      }
 
       return (
         <g
@@ -292,8 +305,8 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
           style={{ cursor: draggingNode === node.id ? 'grabbing' : 'grab' }}
         >
           <circle
-            r={isTrieNode ? 18 : 22}
-            className={`tree-node-circle tv-node-${state} ${isSelected ? 'selected' : ''}`}
+            r={22}
+            className={`tree-node-circle tv-node-${state} ${isSelected ? 'selected' : ''} ${relClass}`}
             fill={isSelected ? "rgba(245, 158, 11, 0.15)" : undefined}
           />
           <text
@@ -304,15 +317,33 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
           >
             {node.value}
           </text>
-          {(state === 'active' || isSelected) && (
+          {(state === 'active' || isSelected || relClass || node.id === tree.root) && (
             <circle
-              r={isTrieNode ? 24 : 30}
+              r={relClass ? 26 : (node.id === tree.root ? 28 : 30)}
               fill="none"
-              stroke={isSelected ? "#F59E0B" : "#10B981"}
-              strokeWidth={isSelected ? "4" : "2"}
+              stroke={isSelected ? "#F59E0B" : (node.id === tree.root ? "#3B82F6" : (relClass === 'parent' ? "#EF4444" : relClass === 'child' ? "#10B981" : relClass === 'sibling' ? "#8B5CF6" : "#10B981"))}
+              strokeWidth={isSelected || node.id === tree.root ? "4" : "2"}
               className={state === 'active' ? "tv-node-active-pulse" : (isSelected ? "tv-node-selected-glow" : "")}
-              opacity={isSelected ? "1" : "0.5"}
+              opacity={isSelected || node.id === tree.root ? "1" : "0.5"}
             />
+          )}
+          {/* Relationship Labels */}
+          {(isSelected || relClass || node.id === tree.root) && (
+            <g transform="translate(0, -35)" className="tv-rel-badge-group">
+              <rect
+                x="-20" y="-10"
+                width="40" height="18"
+                rx="9"
+                className={`tv-rel-badge-bg ${isSelected ? 'sel' : (node.id === tree.root ? 'root' : relClass)}`}
+              />
+              <text
+                textAnchor="middle"
+                dy=".35em"
+                className="tv-rel-badge-text"
+              >
+                {isSelected ? "SEL" : (node.id === tree.root ? "ROOT" : (relClass === 'parent' ? "PRNT" : relClass === 'child' ? "CHLD" : "SBLG"))}
+              </text>
+            </g>
           )}
         </g>
       );
@@ -326,7 +357,7 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
         <div className="tv-header-left">
           <button className="tv-back-btn" onClick={onBack}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
+              <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             Back to Hub
           </button>
@@ -372,9 +403,9 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
                 <div className="tv-form-group">
                   <div className="tv-input-row">
                     <input
-                      type="number"
+                      type="text"
                       className="tv-input"
-                      placeholder="Value"
+                      placeholder="Value (Number or Letter)"
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
                     />
@@ -445,9 +476,29 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
                       {selectedNode ? `Node ${tree.nodes[selectedNode]?.value || ''} selected` : 'Select a node to add children'}
                     </div>
                     <div className="tv-input-row">
-                      <button className="tv-btn secondary" style={{ flex: 1 }} onClick={() => handleAddManualNode('left')} disabled={!selectedNode}>+ Left</button>
-                      <button className="tv-btn secondary" style={{ flex: 1 }} onClick={() => handleAddManualNode('right')} disabled={!selectedNode}>+ Right</button>
+                      <button
+                        className={`tv-btn secondary ${targetSide === 'left' ? 'active' : ''}`}
+                        style={{ flex: 1 }}
+                        onClick={() => setTargetSide('left')}
+                      >
+                        ← Left Side
+                      </button>
+                      <button
+                        className={`tv-btn secondary ${targetSide === 'right' ? 'active' : ''}`}
+                        style={{ flex: 1 }}
+                        onClick={() => setTargetSide('right')}
+                      >
+                        Right Side →
+                      </button>
                     </div>
+                    <button
+                      className="tv-btn"
+                      onClick={handleAddManualNode}
+                      disabled={!selectedNode || !inputValue}
+                      style={{ width: '100%', marginTop: '8px' }}
+                    >
+                      + Add Node to {targetSide.toUpperCase()}
+                    </button>
                   </>
                 )}
                 <button className="tv-btn danger-text" onClick={handleClear}>Clear Canvas</button>
@@ -522,7 +573,7 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
             <div className="tv-playback">
               <button className="tv-ctrl-btn" onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M15 18l-6-6 6-6"/>
+                  <path d="M15 18l-6-6 6-6" />
                 </svg>
               </button>
 
@@ -532,18 +583,18 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
               >
                 {isPlaying ? (
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
+                    <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
                   </svg>
                 ) : (
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M5 3l14 9-14 9V3z"/>
+                    <path d="M5 3l14 9-14 9V3z" />
                   </svg>
                 )}
               </button>
 
               <button className="tv-ctrl-btn" onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M9 18l6-6-6-6"/>
+                  <path d="M9 18l6-6-6-6" />
                 </svg>
               </button>
             </div>

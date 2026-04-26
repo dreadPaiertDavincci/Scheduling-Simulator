@@ -4,8 +4,8 @@ import type { LLType, LLStep } from './LinkedListEngine';
 import {
   LL_COMPLEXITY,
   generateTraverseSteps, generateSearchSteps,
-  generateInsertHeadSteps, generateInsertTailSteps,
-  generateDeleteHeadSteps, generateDeleteTailSteps,
+  generateInsertHeadSteps, generateInsertTailSteps, generateInsertAtSteps,
+  generateDeleteHeadSteps, generateDeleteTailSteps, generateDeleteAtSteps,
   generateReverseSteps
 } from './LinkedListEngine';
 
@@ -29,6 +29,7 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
   });
 
   const [inputValue, setInputValue] = useState('');
+  const [insertIndex, setInsertIndex] = useState('');
   const [searchValue, setSearchValue] = useState('');
   const [activeOp, setActiveOp] = useState('');
 
@@ -55,6 +56,18 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
     const row = Math.floor(index / nodesPerRow);
     const col = index % nodesPerRow;
     return { x: col * 130, y: row * 100 };
+  };
+
+  // Memory Address Helper (Decimal)
+  const getAddr = (id: string) => {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = ((hash << 5) - hash) + id.charCodeAt(i);
+      hash |= 0;
+    }
+    // Return a 3-digit decimal address
+    const dec = (Math.abs(hash) % 900) + 100;
+    return dec.toString();
   };
 
   const getPathD = (sx: number, sy: number, ex: number, ey: number, isCircular = false) => {
@@ -96,10 +109,10 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
     if (!draggingNode || !dragInfo.current) return;
     const dx = e.clientX - dragInfo.current.startX;
     const dy = e.clientY - dragInfo.current.startY;
-    
+
     let newX = dragInfo.current.nodeStartX + dx;
     let newY = dragInfo.current.nodeStartY + dy;
-    
+
     const svg = (e.target as Element).closest('svg');
     if (svg) {
       const rect = svg.getBoundingClientRect();
@@ -108,7 +121,7 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
       const maxX = Math.max(minX, rect.width - nodeWidth - 60);
       const minY = -90;
       const maxY = Math.max(minY, rect.height - 180);
-      
+
       if (newX < minX) newX = minX;
       if (newX > maxX) newX = maxX;
       if (newY < minY) newY = minY;
@@ -139,11 +152,11 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
     stopPlayback();
     setSteps(newSteps);
     if (newSteps.length === 0) return;
-    
+
     setIsPlaying(true);
     setCurrentStep(0);
     let idx = 0;
-    
+
     const id = setInterval(() => {
       idx++;
       if (idx >= newSteps.length) {
@@ -175,6 +188,45 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
     setActiveOp('Insert Tail');
     setInputValue('');
     playSteps(generateInsertTailSteps(oldData, val, llType));
+  };
+
+  const handleInsertAt = () => {
+    const val = parseInt(inputValue, 10);
+    const idx = parseInt(insertIndex, 10);
+    if (isNaN(val) || isNaN(idx)) return;
+    const oldData = [...data];
+
+    // We update data immediately for the visual container, 
+    // but the engine handles the STEP nodes.
+    const before = oldData.slice(0, idx);
+    const after = oldData.slice(idx);
+    const newData = [...before, val, ...after];
+
+    setActiveOp('Insert At');
+    setInputValue('');
+    setInsertIndex('');
+    playSteps(generateInsertAtSteps(oldData, val, idx, llType));
+
+    setTimeout(() => {
+      setData(newData);
+      setNodePositions({});
+    }, generateInsertAtSteps(oldData, val, idx, llType).length * speed);
+  };
+
+  const handleDeleteAt = () => {
+    const idx = parseInt(insertIndex, 10);
+    if (isNaN(idx) || idx < 0 || idx >= data.length) return;
+    const oldData = [...data];
+    const newData = oldData.filter((_, i) => i !== idx);
+
+    setActiveOp('Delete At');
+    setInsertIndex('');
+    playSteps(generateDeleteAtSteps(oldData, idx, llType));
+
+    setTimeout(() => {
+      setData(newData);
+      setNodePositions({});
+    }, generateDeleteAtSteps(oldData, idx, llType).length * speed);
   };
 
   const handleDeleteHead = () => {
@@ -229,8 +281,8 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
     setNodePositions({});
   };
 
-  const currentDisplay = currentStep >= 0 && steps[currentStep] ? steps[currentStep].nodes : 
-                         data.map((v, i) => ({ id: `d_${i}`, value: v, state: 'default' as any, x: 0, y: 0 }));
+  const currentDisplay = currentStep >= 0 && steps[currentStep] ? steps[currentStep].nodes :
+    data.map((v, i) => ({ id: `d_${i}`, value: v, state: 'default' as any, x: 0, y: 0 }));
   const compInfo = activeOp ? LL_COMPLEXITY[activeOp] : null;
   const progress = steps.length > 0 ? Math.round(((currentStep + 1) / steps.length) * 100) : 0;
 
@@ -243,7 +295,7 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
           {onBack && (
             <button className="ll-back-btn" onClick={onBack}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6"/>
+                <polyline points="15 18 9 12 15 6" />
               </svg>
               Back
             </button>
@@ -260,9 +312,9 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
 
         <div className="ll-section-title">Insertion & Deletion</div>
         <div className="ll-input-main-row">
-          <input 
-            type="number" 
-            placeholder="Value..." 
+          <input
+            type="number"
+            placeholder="Value..."
             className="ll-input-main"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -275,18 +327,43 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
           <button className="ll-btn-action danger-outline" onClick={handleDeleteTail}>Del Tail</button>
         </div>
 
+        <div className="ll-insert-at-row" style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+          <input
+            type="number"
+            placeholder="Index (e.g. 2)"
+            className="ll-input-main"
+            style={{ flex: 1 }}
+            value={insertIndex}
+            onChange={(e) => setInsertIndex(e.target.value)}
+          />
+          <button
+            className="ll-btn-action primary"
+            style={{ flex: '0 0 100px' }}
+            onClick={handleInsertAt}
+          >
+            Insert At
+          </button>
+          <button
+            className="ll-btn-action danger"
+            style={{ flex: '0 0 100px' }}
+            onClick={handleDeleteAt}
+          >
+            Delete At
+          </button>
+        </div>
+
         <div className="ll-divider" />
 
         <div className="ll-section-title">Operations</div>
         <div className="ll-search-row">
-          <input 
-            type="number" 
-            placeholder="Search value..." 
+          <input
+            type="number"
+            placeholder="Search value..."
             className="ll-input-main"
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
           />
-          <button className="ll-btn-action primary" style={{flex: '0 0 70px'}} onClick={handleSearch}>Search</button>
+          <button className="ll-btn-action primary" style={{ flex: '0 0 70px' }} onClick={handleSearch}>Search</button>
         </div>
 
         <div className="ll-actions-grid">
@@ -336,9 +413,12 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
         <div className="ll-status-bar">
           <span className={`ll-status-badge ${llType}`}>{llType.toUpperCase()} Mode</span>
           <span className="ll-status-text">
-            {llType === 'sll' ? 'Singly Linked List: Next pointers only.' :
-             llType === 'dll' ? 'Doubly Linked List: Next & Prev pointers.' :
-             'Circular Linked List: Tail next points to Head.'}
+            {data.length > 0 ? `Head: ${getAddr(`n0_${data[0]}`)}` : "List is Empty"}
+          </span>
+          <span className="ll-status-text" style={{ marginLeft: 'auto', opacity: 0.8 }}>
+            {llType === 'sll' ? 'Next pointers only.' :
+              llType === 'dll' ? 'Next & Prev pointers.' :
+                'Circular: Tail points to Head.'}
           </span>
         </div>
 
@@ -370,70 +450,88 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
                     const nextNode = isLast ? null : currentDisplay[i + 1];
                     const nextPos = nextNode ? (nodePositions[nextNode.id] || getDefaultPos(i + 1)) : null;
 
-                    const nextAddr = nextNode ? Math.abs(nextNode.value * 123).toString().substring(0,3) : "null";
+                    const currentAddr = getAddr(node.id);
+                    const nextAddr = nextNode ? getAddr(nextNode.id) : "NULL";
                     const isDll = llType === 'dll';
                     const nodeWidth = isDll ? 105 : 70;
                     const sectionWidth = 35;
-                    const prevAddr = isDll && i > 0 ? Math.abs(currentDisplay[i-1].value * 123).toString().substring(0,3) : "null";
+                    const prevAddr = isDll && i > 0 ? getAddr(currentDisplay[i - 1].id) : "NULL";
 
                     return (
-                      <g key={node.id} 
-                         className={`ll-node-group ll-node-${node.state}`}
-                         onPointerDown={(e) => handlePointerDown(e, node.id, i)}
-                         onPointerMove={handlePointerMove}
-                         onPointerUp={handlePointerUp}
-                         onPointerCancel={handlePointerUp}
+                      <g key={node.id}
+                        className={`ll-node-group ll-node-${node.state}`}
+                        onPointerDown={(e) => handlePointerDown(e, node.id, i)}
+                        onPointerMove={handlePointerMove}
+                        onPointerUp={handlePointerUp}
+                        onPointerCancel={handlePointerUp}
                       >
                         {/* Connecting Arrow */}
                         {!isLast && nextPos && (
-                           <path d={getPathD(pos.x + nodeWidth, pos.y + (isDll ? 12 : 17), nextPos.x, nextPos.y + (isDll ? 12 : 17))} 
-                                 className="ll-arrow next" fill="none" />
+                          <path d={getPathD(pos.x + nodeWidth, pos.y + (isDll ? 12 : 17), nextPos.x, nextPos.y + (isDll ? 12 : 17))}
+                            className="ll-arrow next" fill="none" />
                         )}
-                        
+
                         {/* Circular Arrow */}
                         {isLast && llType === 'cll' && currentDisplay.length > 0 && (
-                          <path d={getPathD(pos.x + nodeWidth, pos.y + 17, (nodePositions[currentDisplay[0].id] || getDefaultPos(0)).x, (nodePositions[currentDisplay[0].id] || getDefaultPos(0)).y + 17, true)} 
-                                className="ll-arrow circular" fill="none" />
+                          <path d={getPathD(pos.x + nodeWidth, pos.y + 17, (nodePositions[currentDisplay[0].id] || getDefaultPos(0)).x, (nodePositions[currentDisplay[0].id] || getDefaultPos(0)).y + 17, true)}
+                            className="ll-arrow circular" fill="none" />
                         )}
-                        
+
                         {/* Doubly Prev Arrow */}
                         {isDll && i > 0 && (
-                           <path d={getPrevPathD(pos.x, pos.y + 24, (nodePositions[currentDisplay[i-1].id] || getDefaultPos(i-1)).x + nodeWidth, (nodePositions[currentDisplay[i-1].id] || getDefaultPos(i-1)).y + 24)} 
-                                 className="ll-arrow prev" fill="none" />
+                          <path d={getPrevPathD(pos.x, pos.y + 24, (nodePositions[currentDisplay[i - 1].id] || getDefaultPos(i - 1)).x + nodeWidth, (nodePositions[currentDisplay[i - 1].id] || getDefaultPos(i - 1)).y + 24)}
+                            className="ll-arrow prev" fill="none" />
                         )}
-                        
+
                         {/* Node Box */}
                         <g transform={`translate(${pos.x}, ${pos.y})`}>
                           {isDll ? (
                             <>
-                              <text x="17" y="-8" className="ll-label-text" textAnchor="middle" fontSize="8">prev</text>
-                              <text x="52" y="-8" className="ll-label-text" textAnchor="middle" fontSize="8">data</text>
-                              <text x="87" y="-8" className="ll-label-text" textAnchor="middle" fontSize="8">next</text>
-                              
                               <rect x="0" y="0" width="105" height="35" className="ll-node-rect" />
                               <line x1="35" y1="0" x2="35" y2="35" className="ll-node-divider" />
                               <line x1="70" y1="0" x2="70" y2="35" className="ll-node-divider" />
-                              
+
                               <text x="17.5" y="17.5" className="ll-addr-text" dominantBaseline="middle" textAnchor="middle" fontSize="10">{prevAddr}</text>
                               <text x="52.5" y="17.5" className="ll-data-text" dominantBaseline="middle" textAnchor="middle" fontSize="12">{node.value}</text>
                               <text x="87.5" y="17.5" className="ll-addr-text" dominantBaseline="middle" textAnchor="middle" fontSize="10">{nextAddr}</text>
-                              
-                              {node.state === 'head' && <text x="52.5" y="-25" className="ll-label-text" textAnchor="middle" fontWeight="bold">head</text>}
-                              {node.state === 'tail' && <text x="52.5" y="-25" className="ll-label-text" textAnchor="middle" fontWeight="bold">tail</text>}
+
+                              <text x="52.5" y="48" className="ll-addr-label" textAnchor="middle" fontSize="8" fontWeight="bold">Addr: {currentAddr}</text>
+
+                              {i === 0 && (
+                                <g transform="translate(52.5, -18)">
+                                  <rect x="-24" y="-10" width="48" height="20" rx="10" fill="#14B8A6" stroke="#fff" strokeWidth="2" />
+                                  <text dy=".35em" className="ll-marker-text" textAnchor="middle" fontSize="11" fill="white" fontWeight="900">HEAD</text>
+                                </g>
+                              )}
+                              {i === currentDisplay.length - 1 && i !== 0 && (
+                                <g transform="translate(52.5, -15)">
+                                  <rect x="-20" y="-8" width="40" height="16" rx="8" fill="#4B5563" />
+                                  <text dy=".35em" className="ll-marker-text" textAnchor="middle" fontSize="9" fill="white" fontWeight="900">TAIL</text>
+                                </g>
+                              )}
                             </>
                           ) : (
                             <>
-                              <text x="17.5" y="-8" className="ll-label-text" textAnchor="middle" fontSize="8">data</text>
-                              <text x="52.5" y="-8" className="ll-label-text" textAnchor="middle" fontSize="8">next</text>
-                              
                               <rect x="0" y="0" width="70" height="35" className="ll-node-rect" />
                               <line x1="35" y1="0" x2="35" y2="35" className="ll-node-divider" />
-                              
+
                               <text x="17.5" y="17.5" className="ll-data-text" dominantBaseline="middle" textAnchor="middle" fontSize="12">{node.value}</text>
                               <text x="52.5" y="17.5" className="ll-addr-text" dominantBaseline="middle" textAnchor="middle" fontSize="10">{nextAddr}</text>
-                              
-                              {node.state === 'head' && <text x="35" y="-25" className="ll-label-text" textAnchor="middle" fontWeight="bold">head</text>}
-                              {node.state === 'tail' && <text x="35" y="-25" className="ll-label-text" textAnchor="middle" fontWeight="bold">tail</text>}
+
+                              <text x="35" y="48" className="ll-addr-label" textAnchor="middle" fontSize="8" fontWeight="bold">Addr: {currentAddr}</text>
+
+                              {i === 0 && (
+                                <g transform="translate(35, -18)">
+                                  <rect x="-24" y="-10" width="48" height="20" rx="10" fill="#14B8A6" stroke="#fff" strokeWidth="2" />
+                                  <text dy=".35em" className="ll-marker-text" textAnchor="middle" fontSize="11" fill="white" fontWeight="900">HEAD</text>
+                                </g>
+                              )}
+                              {i === currentDisplay.length - 1 && i !== 0 && (
+                                <g transform="translate(35, -15)">
+                                  <rect x="-20" y="-8" width="40" height="16" rx="8" fill="#4B5563" />
+                                  <text dy=".35em" className="ll-marker-text" textAnchor="middle" fontSize="9" fill="white" fontWeight="900">TAIL</text>
+                                </g>
+                              )}
                             </>
                           )}
                         </g>

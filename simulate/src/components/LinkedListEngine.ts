@@ -162,6 +162,114 @@ export function generateInsertTailSteps(values: number[], newVal: number, llType
   return steps;
 }
 
+export function generateInsertAtSteps(values: number[], newVal: number, index: number, llType: LLType): LLStep[] {
+  if (index <= 0) return generateInsertHeadSteps(values, newVal, llType);
+  if (index >= values.length) return generateInsertTailSteps(values, newVal, llType);
+
+  const steps: LLStep[] = [];
+  steps.push({ 
+    nodes: makeNodes(values, llType), 
+    description: `Inserting [${newVal}] at index ${index}. Traverse to position ${index - 1}.`, 
+    operation: 'Insert At' 
+  });
+
+  // Step 1: Traverse to index-1
+  for (let i = 0; i < index; i++) {
+    const nodes = values.map((v, j) => ({
+      id: `n${j}_${v}`, value: v,
+      state: (j < i ? 'highlight' : j === i ? 'active' : 'default') as NodeState,
+      x: 0, y: 0,
+    }));
+    steps.push({ nodes, description: `Traversing... currently at node [${values[i]}] (index ${i})`, operation: 'Insert At' });
+  }
+
+  // Step 2: Show the insertion logic
+  const before = values.slice(0, index);
+  const after = values.slice(index);
+  const result = [...before, newVal, ...after];
+
+  // Highlight the surrounding nodes
+  const prepNodes = result.map((v, i) => {
+    let state: NodeState = 'default';
+    if (i === index) state = 'inserted';
+    else if (i === index - 1) state = 'active'; // The 'before' node
+    else if (i === index + 1) state = 'highlight'; // The 'after' node
+    else if (i === 0) state = 'head';
+    else if (i === result.length - 1) state = 'tail';
+
+    return { id: `n${i}_${v}`, value: v, state, x: 0, y: 0 };
+  });
+
+  steps.push({ 
+    nodes: prepNodes, 
+    description: `New node [${newVal}] created. Link [${newVal}]->next = [${after[0]}].`, 
+    operation: 'Insert At' 
+  });
+
+  if (llType === 'dll') {
+    steps.push({ 
+      nodes: prepNodes, 
+      description: `DLL: Link [${after[0]}]->prev = [${newVal}] and [${newVal}]->prev = [${before[before.length - 1]}].`, 
+      operation: 'Insert At' 
+    });
+  }
+
+  steps.push({ 
+    nodes: prepNodes, 
+    description: `Link [${before[before.length - 1]}]->next = [${newVal}]. Insertion complete! ✅`, 
+    operation: 'Insert At' 
+  });
+
+  return steps;
+}
+
+export function generateDeleteAtSteps(values: number[], index: number, llType: LLType): LLStep[] {
+  if (index <= 0) return generateDeleteHeadSteps(values, llType);
+  if (index >= values.length - 1) return generateDeleteTailSteps(values, llType);
+
+  const steps: LLStep[] = [];
+  steps.push({ 
+    nodes: makeNodes(values, llType), 
+    description: `Deleting node at index ${index}. Traverse to position ${index - 1}.`, 
+    operation: 'Delete At' 
+  });
+
+  // Step 1: Traverse to index-1
+  for (let i = 0; i < index; i++) {
+    const nodes = values.map((v, j) => ({
+      id: `n${j}_${v}`, value: v,
+      state: (j < i ? 'highlight' : j === i ? 'active' : 'default') as NodeState,
+      x: 0, y: 0,
+    }));
+    steps.push({ nodes, description: `Traversing... currently at node [${values[i]}] (index ${i})`, operation: 'Delete At' });
+  }
+
+  // Step 2: Mark for deletion
+  const markedNodes = values.map((v, j) => ({
+    id: `n${j}_${v}`, value: v,
+    state: (j === index ? 'deleted' : j === index - 1 ? 'active' : j === index + 1 ? 'highlight' : 'default') as NodeState,
+    x: 0, y: 0,
+  }));
+  steps.push({ nodes: markedNodes, description: `Mark node [${values[index]}] (index ${index}) for deletion.`, operation: 'Delete At' });
+
+  // Step 3: Re-link
+  const after = values.filter((_, i) => i !== index);
+  const resultNodes = after.map((v, i) => {
+    let state: NodeState = 'default';
+    if (i === 0) state = 'head';
+    if (i === after.length - 1) state = 'tail';
+    return { id: `n${i}_${v}`, value: v, state, x: 0, y: 0 };
+  });
+
+  steps.push({ 
+    nodes: resultNodes, 
+    description: `Update [${values[index-1]}]->next to point to [${values[index+1]}]. Node removed! ✅`, 
+    operation: 'Delete At' 
+  });
+
+  return steps;
+}
+
 export function generateDeleteHeadSteps(values: number[], llType: LLType): LLStep[] {
   if (values.length === 0) return [];
   const steps: LLStep[] = [];
