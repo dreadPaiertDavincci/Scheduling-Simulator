@@ -59,7 +59,11 @@ const Icons = {
 const STORAGE_KEY = 'queue_simulator_data';
 const SPEED_KEY = 'queue_simulator_speed';
 
-const QueueVisualizer: React.FC = () => {
+interface Props {
+  onBack?: () => void;
+}
+
+const QueueVisualizer: React.FC<Props> = ({ onBack }) => {
   // ── State ────────────────────────────────────────────────────────────────────
   const [data, setData] = useState<number[]>(() => {
     try {
@@ -215,6 +219,14 @@ const QueueVisualizer: React.FC = () => {
       <div className="queue-sidebar">
         {/* Header */}
         <div className="queue-header">
+          {onBack && (
+            <button className="queue-back-btn" onClick={onBack}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+              Back
+            </button>
+          )}
           <div className="queue-badge">
             <span className="queue-badge-dot" />
             FIFO Structure

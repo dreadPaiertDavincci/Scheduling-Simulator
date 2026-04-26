@@ -6,7 +6,11 @@ import {
   type StackNode, type StackStep
 } from './StackEngine';
 
-const StackVisualizer: React.FC = () => {
+interface Props {
+  onBack?: () => void;
+}
+
+const StackVisualizer: React.FC<Props> = ({ onBack }) => {
   // SVG Icons
   const Icons = {
     Push: () => (
@@ -72,14 +76,6 @@ const StackVisualizer: React.FC = () => {
         clearInterval(id);
         setIsPlaying(false);
         setCurrentStep(newSteps.length - 1);
-
-        // Apply final changes
-        const op = newSteps[0]?.operation;
-        if (op === 'Push' && newValRef.current !== null) {
-          setData(prev => [newValRef.current!, ...prev]);
-        } else if (op === 'Pop') {
-          setData(prev => prev.slice(1));
-        }
       } else {
         setCurrentStep(idx);
       }
@@ -91,16 +87,25 @@ const StackVisualizer: React.FC = () => {
   const handlePush = () => {
     const val = parseInt(inputValue);
     if (isNaN(val)) return;
-    newValRef.current = val;
+    
+    // Mutate state immediately
+    const oldData = [...data];
+    setData([val, ...oldData]);
+    
     setActiveOp('Push');
-    playSteps(generatePushSteps(data, val));
+    playSteps(generatePushSteps(oldData, val));
     setInputValue('');
   };
 
   const handlePop = () => {
     if (data.length === 0) return;
+    
+    // Mutate state immediately
+    const oldData = [...data];
+    setData(oldData.slice(1));
+    
     setActiveOp('Pop');
-    playSteps(generatePopSteps(data));
+    playSteps(generatePopSteps(oldData));
   };
 
   const handlePeek = () => {
@@ -137,6 +142,14 @@ const StackVisualizer: React.FC = () => {
       {/* SIDEBAR */}
       <div className="stack-sidebar">
         <div className="stack-header">
+          {onBack && (
+            <button className="stack-back-btn" onClick={onBack}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+              Back
+            </button>
+          )}
           <h2>Stack Simulator</h2>
           <p>LIFO: Last-In, First-Out behavior.</p>
         </div>

@@ -52,13 +52,13 @@ function App() {
               <StatisticsPanel />
             </>
           ) : activeTab === 'array-visualizer' ? (
-            <ArrayVisualizer />
+            <ArrayVisualizer onBack={() => setActiveTab('data-structures')} />
           ) : activeTab === 'linked-list-visualizer' ? (
-            <LinkedListVisualizer />
+            <LinkedListVisualizer onBack={() => setActiveTab('data-structures')} />
           ) : activeTab === 'stack-visualizer' ? (
-            <StackVisualizer />
+            <StackVisualizer onBack={() => setActiveTab('data-structures')} />
           ) : activeTab === 'queue-visualizer' ? (
-            <QueueVisualizer />
+            <QueueVisualizer onBack={() => setActiveTab('data-structures')} />
           ) : activeTab === 'graph-visualizer' ? (
             <GraphVisualizer onBack={() => setActiveTab('data-structures')} />
           ) : (

@@ -246,6 +246,36 @@ export default function GraphVisualizer({ onBack }: Props) {
 
   const onSvgMouseUp = () => { dragging.current = null; };
 
+  const onSvgDoubleClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (mode !== 'edit') return;
+    const svgEl = svgRef.current;
+    if (!svgEl) return;
+    const rect = svgEl.getBoundingClientRect();
+    const sx = svgEl.viewBox.baseVal.width  / rect.width;
+    const sy = svgEl.viewBox.baseVal.height / rect.height;
+    
+    const mx = (e.clientX - rect.left) * sx;
+    const my = (e.clientY - rect.top)  * sy;
+
+    // Find the next available letter or ID
+    let newId = '';
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    for (const char of letters) {
+      if (!graph.nodes.some(n => n.id === char)) {
+        newId = char;
+        break;
+      }
+    }
+    if (!newId) {
+      let counter = 1;
+      while (graph.nodes.some(n => n.id === `N${counter}`)) counter++;
+      newId = `N${counter}`;
+    }
+
+    const newNode: GraphNode = { id: newId, label: newId, x: mx, y: my, heuristic: 0 };
+    setGraph(g => ({ ...g, nodes: [...g.nodes, newNode] }));
+  };
+
   /* ── edge path state ── */
   const isOnPath = (from: string, to: string) => {
     if (!step?.foundPath) return false;
@@ -576,6 +606,7 @@ export default function GraphVisualizer({ onBack }: Props) {
             onMouseMove={onSvgMouseMove}
             onMouseUp={onSvgMouseUp}
             onMouseLeave={onSvgMouseUp}
+            onDoubleClick={onSvgDoubleClick}
           >
             <defs>
               <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">

@@ -32,6 +32,28 @@
 
 /* Header */
 .queue-header { margin-bottom: 24px; }
+
+.queue-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background: transparent;
+  color: #64748B;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.queue-back-btn:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
 .queue-header h2 {
   font-size: 24px;
   font-weight: 900;

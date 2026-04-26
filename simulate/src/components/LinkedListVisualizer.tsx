@@ -9,7 +9,11 @@ import {
   generateReverseSteps
 } from './LinkedListEngine';
 
-const LinkedListVisualizer: React.FC = () => {
+interface Props {
+  onBack?: () => void;
+}
+
+const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
   // Persistence Keys
   const STORAGE_DATA_KEY = 'll_simulator_data';
   const STORAGE_TYPE_KEY = 'll_simulator_type';
@@ -123,11 +127,6 @@ const LinkedListVisualizer: React.FC = () => {
     }
   };
 
-  // Auto-scroll removed per user request to allow free scrolling
-  // useEffect(() => {
-  //   logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  // }, [currentStep]);
-
   useEffect(() => { return () => stopPlayback(); }, []);
 
   function stopPlayback() {
@@ -151,21 +150,6 @@ const LinkedListVisualizer: React.FC = () => {
         clearInterval(id);
         setIsPlaying(false);
         setCurrentStep(newSteps.length - 1);
-        
-        // After finish, apply result to data if it modifies
-        const op = newSteps[0]?.operation;
-        if (op === 'Insert Head' && newValRef.current !== null) {
-          setData(prev => [newValRef.current!, ...prev]);
-        } else if (op === 'Insert Tail' && newValRef.current !== null) {
-          setData(prev => [...prev, newValRef.current!]);
-        } else if (op === 'Delete Head') {
-          setData(prev => prev.slice(1));
-        } else if (op === 'Delete Tail') {
-          setData(prev => prev.slice(0, -1));
-        } else if (op === 'Reverse') {
-          setData(prev => [...prev].reverse());
-        }
-        
         return;
       }
       setCurrentStep(idx);
@@ -173,34 +157,38 @@ const LinkedListVisualizer: React.FC = () => {
     intervalRef.current = id;
   }
 
-  const newValRef = useRef<number | null>(null);
-
   const handleInsertHead = () => {
     const val = parseInt(inputValue, 10);
     if (isNaN(val)) return;
-    newValRef.current = val;
+    const oldData = [...data];
+    setData([val, ...oldData]);
     setActiveOp('Insert Head');
     setInputValue('');
-    playSteps(generateInsertHeadSteps(data, val, llType));
+    playSteps(generateInsertHeadSteps(oldData, val, llType));
   };
 
   const handleInsertTail = () => {
     const val = parseInt(inputValue, 10);
     if (isNaN(val)) return;
-    newValRef.current = val;
+    const oldData = [...data];
+    setData([...oldData, val]);
     setActiveOp('Insert Tail');
     setInputValue('');
-    playSteps(generateInsertTailSteps(data, val, llType));
+    playSteps(generateInsertTailSteps(oldData, val, llType));
   };
 
   const handleDeleteHead = () => {
+    const oldData = [...data];
+    setData(oldData.slice(1));
     setActiveOp('Delete Head');
-    playSteps(generateDeleteHeadSteps(data, llType));
+    playSteps(generateDeleteHeadSteps(oldData, llType));
   };
 
   const handleDeleteTail = () => {
+    const oldData = [...data];
+    setData(oldData.slice(0, -1));
     setActiveOp('Delete Tail');
-    playSteps(generateDeleteTailSteps(data, llType));
+    playSteps(generateDeleteTailSteps(oldData, llType));
   };
 
   const handleSearch = () => {
@@ -252,6 +240,14 @@ const LinkedListVisualizer: React.FC = () => {
       {/* SIDEBAR */}
       <div className="ll-sidebar">
         <div className="ll-header">
+          {onBack && (
+            <button className="ll-back-btn" onClick={onBack}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+              Back
+            </button>
+          )}
           <h2>Linked List</h2>
           <p>Node connections & dynamic memory</p>
         </div>
