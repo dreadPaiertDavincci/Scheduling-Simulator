@@ -9,9 +9,10 @@ import LinkedListVisualizer from './components/LinkedListVisualizer';
 import StackVisualizer from './components/StackVisualizer';
 import QueueVisualizer from './components/QueueVisualizer';
 import GraphVisualizer from './components/GraphVisualizer';
+import TreeVisualizer from './components/TreeVisualizer';
 import { SimulationProvider } from './hooks/useSimulation';
 
-export type ViewType = 'scheduler' | 'data-structures' | 'array-visualizer' | 'linked-list-visualizer' | 'stack-visualizer' | 'queue-visualizer' | 'graph-visualizer';
+export type ViewType = 'scheduler' | 'data-structures' | 'array-visualizer' | 'linked-list-visualizer' | 'stack-visualizer' | 'queue-visualizer' | 'graph-visualizer' | 'tree-visualizer';
 
 function App() {
   const [activeTab, setActiveTab] = useState<ViewType>(() => {
@@ -26,8 +27,8 @@ function App() {
   return (
     <SimulationProvider>
       <Navbar 
-        activeTab={(activeTab === 'array-visualizer' || activeTab === 'linked-list-visualizer' || activeTab === 'stack-visualizer' || activeTab === 'queue-visualizer' || activeTab === 'graph-visualizer') ? 'data-structures' : activeTab} 
-        onTabChange={setActiveTab as any} 
+        activeTab={(activeTab === 'array-visualizer' || activeTab === 'linked-list-visualizer' || activeTab === 'stack-visualizer' || activeTab === 'queue-visualizer' || activeTab === 'graph-visualizer' || activeTab === 'tree-visualizer') ? 'data-structures' : activeTab} 
+        onTabChange={(tab) => setActiveTab(tab)} 
       />
       <div className="page-wrapper">
         <div className="left-accent"></div>
@@ -61,6 +62,8 @@ function App() {
             <QueueVisualizer onBack={() => setActiveTab('data-structures')} />
           ) : activeTab === 'graph-visualizer' ? (
             <GraphVisualizer onBack={() => setActiveTab('data-structures')} />
+          ) : activeTab === 'tree-visualizer' ? (
+            <TreeVisualizer onBack={() => setActiveTab('data-structures')} />
           ) : (
             <DataStructures 
               onOpenVisualizer={() => setActiveTab('array-visualizer')} 
@@ -68,6 +71,7 @@ function App() {
               onOpenStack={() => setActiveTab('stack-visualizer')}
               onOpenQueue={() => setActiveTab('queue-visualizer')}
               onOpenGraph={() => setActiveTab('graph-visualizer')}
+              onOpenTree={() => setActiveTab('tree-visualizer')}
             />
           )}
         </div>

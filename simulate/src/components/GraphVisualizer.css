@@ -117,6 +117,7 @@
   border-radius: 8px;
   border: 1.5px solid var(--border-color);
   background: transparent;
+  color: var(--text-primary);
   cursor: pointer;
   font-family: var(--font-sans);
   transition: all 0.18s;
@@ -864,4 +865,35 @@
   line-height: 1;
 }
 .gv-del-btn:hover { background: rgba(239,68,68,0.15); }
+
+/* Dark Mode Button Refinement */
+[data-theme='dark'] .gv-algo-btn {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: #334155;
+  color: #94A3B8;
+}
+
+[data-theme='dark'] .gv-algo-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #475569;
+  color: #F1F5F9;
+  transform: translateY(-2px);
+}
+
+[data-theme='dark'] .gv-algo-btn.active {
+  color: #FFFFFF;
+  background: #3B82F6;
+  border-color: transparent;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+}
+
+[data-theme='dark'] .gv-algo-cat {
+  color: #64748B;
+  opacity: 1;
+}
+
+[data-theme='dark'] .gv-algo-btn.active .gv-algo-cat {
+  color: rgba(255, 255, 255, 0.8);
+}
+
 

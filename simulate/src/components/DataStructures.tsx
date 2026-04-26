@@ -7,9 +7,17 @@ interface DataStructuresProps {
   onOpenStack?: () => void;
   onOpenQueue?: () => void;
   onOpenGraph?: () => void;
+  onOpenTree?: () => void;
 }
 
-const DataStructures: React.FC<DataStructuresProps> = ({ onOpenVisualizer, onOpenLinkedList, onOpenStack, onOpenQueue, onOpenGraph }) => {
+const DataStructures: React.FC<DataStructuresProps> = ({ 
+  onOpenVisualizer, 
+  onOpenLinkedList, 
+  onOpenStack, 
+  onOpenQueue, 
+  onOpenGraph,
+  onOpenTree
+}) => {
   const cards = [
     {
       id: 'array',
@@ -123,7 +131,7 @@ const DataStructures: React.FC<DataStructuresProps> = ({ onOpenVisualizer, onOpe
             <p className="ds-card-desc">{card.desc}</p>
             <button 
               className="ds-card-btn"
-              onClick={card.id === 'array' ? onOpenVisualizer : card.id === 'linked-list' ? onOpenLinkedList : card.id === 'stack' ? onOpenStack : card.id === 'queue' ? onOpenQueue : card.id === 'graphs' ? onOpenGraph : undefined}
+              onClick={card.id === 'array' ? onOpenVisualizer : card.id === 'linked-list' ? onOpenLinkedList : card.id === 'stack' ? onOpenStack : card.id === 'queue' ? onOpenQueue : card.id === 'graphs' ? onOpenGraph : card.id === 'trees' ? onOpenTree : undefined}
             >
               OPEN VISUALIZER
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
