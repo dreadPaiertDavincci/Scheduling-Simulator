@@ -3,7 +3,7 @@ import './StackVisualizer.css';
 import {
   STACK_COMPLEXITY,
   generatePushSteps, generatePopSteps, generatePeekSteps,
-  type StackNode, type StackStep
+  type StackStep
 } from './StackEngine';
 
 interface Props {
@@ -44,11 +44,10 @@ const StackVisualizer: React.FC<Props> = ({ onBack }) => {
   const [steps, setSteps] = useState<StackStep[]>([]);
   const [currentStep, setCurrentStep] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(600);
+  const [speed] = useState(600);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
-  const newValRef = useRef<number | null>(null);
 
   // Persistence
   useEffect(() => {

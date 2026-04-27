@@ -82,7 +82,7 @@ export default function Sidebar() {
     processes, setProcesses, currentProcesses,
     selectedAlgo, setSelectedAlgo,
     quantum, setQuantum,
-    status, runSimulation, play, pause, reset, stepForward, stepBackward
+    status, play, pause, reset, stepForward, stepBackward
   } = useSimulation();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);

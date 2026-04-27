@@ -35,7 +35,7 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
 
   const [steps, setSteps] = useState<LLStep[]>([]);
   const [currentStep, setCurrentStep] = useState(-1);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(600);
 
   // Persistence Effect
@@ -454,7 +454,6 @@ const LinkedListVisualizer: React.FC<Props> = ({ onBack }) => {
                     const nextAddr = nextNode ? getAddr(nextNode.id) : "NULL";
                     const isDll = llType === 'dll';
                     const nodeWidth = isDll ? 105 : 70;
-                    const sectionWidth = 35;
                     const prevAddr = isDll && i > 0 ? getAddr(currentDisplay[i - 1].id) : "NULL";
 
                     return (

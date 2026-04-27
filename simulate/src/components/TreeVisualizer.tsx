@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './TreeVisualizer.css';
 import {
   TREE_ALGORITHMS,
   createDefaultBST,
   generateRandomBST,
-  clearTree,
   layoutTree,
   bstInsert,
   bstDelete,
@@ -42,7 +41,6 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
   const [inputValue, setInputValue] = useState('');
   const [exprValue, setExprValue] = useState('2 + 3 * 4');
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
-  const [targetSide, setTargetSide] = useState<'left' | 'right'>('left');
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [draggingNode, setDraggingNode] = useState<string | null>(null);
   const [traversalResults, setTraversalResults] = useState<{ prefix: string, postfix: string }>({ prefix: '', postfix: '' });
@@ -159,7 +157,12 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
     setCurrentStep(0);
   };
 
+  const handleHeapInsert = () => {
+    setInputValue('');
+  };
 
+  const handleHeapExtract = () => {
+  };
 
   const handleRandom = () => {
     if (activeAlgo.includes('expr')) {
@@ -177,12 +180,6 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
       setTree(createDefaultBST());
       setActiveAlgo('preorder');
     }
-    resetSimulation();
-  };
-
-  const handleClear = () => {
-    setTree(clearTree());
-    setSelectedNode(null);
     resetSimulation();
   };
 
@@ -316,7 +313,7 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
   const nodeStates = step?.nodeStates || {};
 
   const currentTree = (activeAlgo.startsWith('trie')) ? null : tree;
-  const currentTrie = (activeAlgo.startsWith('trie')) ? trie : null;
+  const currentTrie = (activeAlgo.startsWith('trie')) ? tree as any : null;
 
   const renderEdges = () => {
     if (currentTree) {
@@ -342,8 +339,8 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
       ));
     }
     if (currentTrie) {
-      return Object.values(currentTrie.nodes).map(node => (
-        Object.entries(node.children).map(([char, childId]) => (
+      return Object.values(currentTrie.nodes).map((node: any) => (
+        Object.entries(node.children).map(([char, childId]: [string, any]) => (
           <React.Fragment key={`trie-edge-${node.id}-${childId}`}>
             <line
               x1={node.x} y1={node.y}

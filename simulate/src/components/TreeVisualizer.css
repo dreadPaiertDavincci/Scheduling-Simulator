@@ -963,15 +963,6 @@
 }
 
 
-font-size: 11px !important;
-margin-top: 8px;
-}
-
-.danger-text:hover {
-  background: rgba(239, 68, 68, 0.05) !important;
-  border-color: #EF4444 !important;
-}
-
 /* Animations & Effects */
 .tv-node-active-pulse {
   animation: tv-active-pulse 1.5s infinite ease-in-out;

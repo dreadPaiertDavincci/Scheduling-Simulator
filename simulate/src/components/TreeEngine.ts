@@ -40,8 +40,8 @@ export interface TreeStep {
 export function layoutTree(
   nodes: Record<string, TreeNode>,
   root: string | null,
-  canvasW = 800,
-  canvasH = 600,
+  _canvasW = 800,
+  _canvasH = 600,
   startY = 60
 ): Record<string, TreeNode> {
   if (!root) return nodes;
@@ -54,7 +54,7 @@ export function layoutTree(
     return getSubtreeWidth(n.left) + getSubtreeWidth(n.right) + 20; // Recursive width plus padding
   }
 
-  function assign(id: string | null, x: number, y: number, width: number) {
+  function assign(id: string | null, x: number, y: number, _width: number) {
     if (!id) return;
     const n = result[id];
     n.x = x;
@@ -241,7 +241,7 @@ export function buildHeapTree(values: (number | string)[]): Tree {
   if (values.length === 0) return t;
 
   const nodes: Record<string, TreeNode> = {};
-  const ids = values.map((v, i) => `h-${i}`);
+  const ids = values.map((_v, i) => `h-${i}`);
 
   values.forEach((v, i) => {
     const id = ids[i];
@@ -765,7 +765,7 @@ export function generateRandomExpr(difficulty: 'easy' | 'medium' | 'hard' = 'med
   ]);
 }
 
-function evalExprTree(tree: Tree, id: string | null): number {
+export function evalExprTree(tree: Tree, id: string | null): number {
   if (!id) return 0;
   const n = tree.nodes[id];
   if (!n.left && !n.right) return parseFloat(String(n.value)) || 0;

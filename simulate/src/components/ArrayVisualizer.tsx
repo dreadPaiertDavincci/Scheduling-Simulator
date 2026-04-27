@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ArrayVisualizer.css';
-import type { Step, StepType } from './AlgoEngine';
+import type { StepType } from './AlgoEngine';
 import {
   ALGO_INFO,
   generateBubbleSortSteps, generateSelectionSortSteps,
@@ -113,7 +113,6 @@ const ArrayVisualizer: React.FC<Props> = ({ onBack }) => {
   const [language, setLanguage] = useState(() => sessionStorage.getItem('av_language') || 'C++');
   const [searchTarget, setSearchTarget] = useState(() => sessionStorage.getItem('av_searchTarget') || '');
 
-  const [stepsStateDummy, setSteps] = useState<Step[]>([]); // remove unused
   const [currentStep, setCurrentStep] = useState(() => {
     const s = sessionStorage.getItem('av_currentStep');
     return s ? parseInt(s, 10) : -1;

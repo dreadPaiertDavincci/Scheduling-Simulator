@@ -1,4 +1,3 @@
-import React from 'react';
 import { useSimulation } from '../hooks/useSimulation';
 import './CalculationDetails.css';
 

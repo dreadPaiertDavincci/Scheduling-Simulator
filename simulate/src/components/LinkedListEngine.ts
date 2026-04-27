@@ -43,7 +43,7 @@ export const LL_COMPLEXITY: Record<string, ComplexityInfo> = {
 };
 
 // ---- Step Generators ----
-function makeNodes(values: number[], llType: LLType): LLNode[] {
+function makeNodes(values: number[], _llType: LLType): LLNode[] {
   return values.map((v, i) => ({
     id: `n${i}_${v}`,
     value: v,
