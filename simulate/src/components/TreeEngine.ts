@@ -32,40 +32,51 @@ export interface TreeStep {
   expressionResult?: string;
   path?: string[];
   trieHighlight?: string[]; // highlighted char indices for Trie
+  prefixResult?: string;
+  postfixResult?: string;
 }
 
 // ── Layout helpers ──────────────────────────────
 export function layoutTree(
   nodes: Record<string, TreeNode>,
   root: string | null,
-  canvasW = 600,
-  canvasH = 500,
+  canvasW = 800,
+  canvasH = 600,
   startY = 60
 ): Record<string, TreeNode> {
   if (!root) return nodes;
   const result: Record<string, TreeNode> = JSON.parse(JSON.stringify(nodes));
 
-  function getSubtreeWidth(id: string | null, depth: number): number {
-    if (!id) return 0;
+  function getSubtreeWidth(id: string | null): number {
+    if (!id) return 60; // Minimum gap for empty slot
     const n = result[id];
-    const l = getSubtreeWidth(n.left, depth + 1);
-    const r = getSubtreeWidth(n.right, depth + 1);
-    return Math.max(l + r, 60);
+    if (!n.left && !n.right) return 100; // Leaf width
+    return getSubtreeWidth(n.left) + getSubtreeWidth(n.right) + 20; // Recursive width plus padding
   }
 
-  function assign(id: string | null, x: number, y: number, spread: number) {
+  function assign(id: string | null, x: number, y: number, width: number) {
     if (!id) return;
     const n = result[id];
     n.x = x;
     n.y = y;
-    const half = spread / 2;
-    assign(n.left, x - half, y + 80, half);
-    assign(n.right, x + half, y + 80, half);
+
+    const leftW = getSubtreeWidth(n.left);
+    const rightW = getSubtreeWidth(n.right);
+    const totalW = leftW + rightW;
+
+    if (n.left) {
+      const leftX = x - (totalW / 2) + (leftW / 2);
+      assign(n.left, leftX, y + 120, leftW);
+    }
+    if (n.right) {
+      const rightX = x + (totalW / 2) - (rightW / 2);
+      assign(n.right, rightX, y + 120, rightW);
+    }
   }
 
-  const totalWidth = getSubtreeWidth(root, 0);
-  const spreadX = Math.max(totalWidth, canvasW * 0.75);
-  assign(root, canvasW / 2, startY, spreadX / 2);
+  const rootWidth = getSubtreeWidth(root);
+  assign(root, 600, startY, rootWidth);
+
   return result;
 }
 
@@ -617,13 +628,19 @@ function buildTrieStates(path: string[], current: string, isEnd = false): Record
 
 function shuntingYard(tokens: string[]): string[] {
   const ops: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2, '^': 3 };
+  const operators = new Set(['+', '-', '*', '/', '^']);
   const output: string[] = [];
   const stack: string[] = [];
 
   tokens.forEach(tok => {
-    if (!isNaN(parseFloat(tok)) || /^[a-zA-Z]$/.test(tok)) {
-      output.push(tok);
-    } else if (tok === '(') {
+    if (!isNaN(parseFloat(tok)) || /^[a-zA-Z0-9.]+$/.test(tok)) {
+      if (!operators.has(tok)) {
+        output.push(tok);
+        return;
+      }
+    }
+
+    if (tok === '(') {
       stack.push(tok);
     } else if (tok === ')') {
       while (stack.length && stack[stack.length - 1] !== '(') {
@@ -646,8 +663,10 @@ function shuntingYard(tokens: string[]): string[] {
 
 // ── Expression Tree ───────────────────────────────
 export function buildExpressionTree(expression: string, notation: 'prefix' | 'postfix'): { tree: Tree; steps: TreeStep[] } {
-  let tokens = expression.replace(/([\(\)\+\-\*\/\^])/g, ' $1 ').trim().split(/\s+/);
-  
+  // Sanitize: replace fancy dashes with standard hyphen
+  const sanitized = expression.replace(/[\u2013\u2014]/g, '-');
+  let tokens = sanitized.replace(/([\(\)\+\-\*\/\^])/g, ' $1 ').trim().split(/\s+/);
+
   // Detection: If infix (contains parentheses or no operators at ends), use shunting-yard
   const hasParens = expression.includes('(') || expression.includes(')');
   const operators = new Set(['+', '-', '*', '/', '^']);
@@ -670,13 +689,13 @@ export function buildExpressionTree(expression: string, notation: 'prefix' | 'po
   }
 
   const nodeStack: TreeNode[] = [];
-  
+
   if (notation === 'prefix') {
     for (let i = tokens.length - 1; i >= 0; i--) {
       const tok = tokens[i];
       const node = makeNode(tok);
       if (operators.has(tok)) {
-        node.left  = nodeStack.pop()?.id ?? null;
+        node.left = nodeStack.pop()?.id ?? null;
         node.right = nodeStack.pop()?.id ?? null;
       }
       nodeStack.push(node);
@@ -693,7 +712,7 @@ export function buildExpressionTree(expression: string, notation: 'prefix' | 'po
       const node = makeNode(tok);
       if (operators.has(tok)) {
         node.right = nodeStack.pop()?.id ?? null;
-        node.left  = nodeStack.pop()?.id ?? null;
+        node.left = nodeStack.pop()?.id ?? null;
       }
       nodeStack.push(node);
       steps.push({
@@ -707,7 +726,7 @@ export function buildExpressionTree(expression: string, notation: 'prefix' | 'po
   }
 
   if (tree.root) {
-    tree.nodes = layoutTree(tree.nodes, tree.root, 600, 400, 50);
+    tree.nodes = layoutTree(tree.nodes, tree.root, 800, 600, 50);
     steps.push({
       nodeStates: Object.fromEntries(Object.keys(tree.nodes).map(id => [id, 'visited'])),
       visitedOrder: Object.keys(tree.nodes),
@@ -723,12 +742,12 @@ export function generateRandomExpr(difficulty: 'easy' | 'medium' | 'hard' = 'med
   const ops = ['+', '-', '*', '/'];
   const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const pick = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
-  
+
   if (difficulty === 'easy') {
     // a op b
     return `${pick(nums)} ${pick(ops)} ${pick(nums)}`;
   }
-  
+
   if (difficulty === 'medium') {
     // (a op b) op c
     const a = pick(nums), b = pick(nums), c = pick(nums);
@@ -797,6 +816,27 @@ export function generateRandomBST(count: number = 10): Tree {
   });
   return t;
 }
+export function getPrefixPostfix(tree: Tree): { prefix: string; postfix: string } {
+  if (!tree.root) return { prefix: '', postfix: '' };
+
+  const prefixNodes: (string | number)[] = [];
+  const postfixNodes: (string | number)[] = [];
+
+  function traverse(id: string | null) {
+    if (!id) return;
+    const node = tree.nodes[id];
+    prefixNodes.push(node.value);
+    traverse(node.left);
+    traverse(node.right);
+    postfixNodes.push(node.value);
+  }
+
+  traverse(tree.root);
+  return {
+    prefix: prefixNodes.join(' '),
+    postfix: postfixNodes.join(' ')
+  };
+}
 
 export function clearTree(): Tree {
   return { nodes: {}, root: null, type: 'bst' };
@@ -804,13 +844,13 @@ export function clearTree(): Tree {
 
 
 export const TREE_ALGORITHMS = [
-  { id: 'preorder',    label: 'Preorder',           category: 'Traversal',   desc: 'Root → Left → Right' },
-  { id: 'inorder',     label: 'Inorder',             category: 'Traversal',   desc: 'Left → Root → Right (sorted)' },
-  { id: 'postorder',   label: 'Postorder',           category: 'Traversal',   desc: 'Left → Right → Root' },
-  { id: 'levelorder',  label: 'Level-Order',         category: 'Traversal',   desc: 'Breadth-First (BFS)' },
-  { id: 'bst-rec',     label: 'BST Recursive',       category: 'BST Search',  desc: 'Recursive divide & conquer' },
-  { id: 'prefix-expr', label: 'Prefix Notation',    category: 'Expression',  desc: 'Polish prefix expression tree' },
-  { id: 'postfix-expr',label: 'Postfix Notation',   category: 'Expression',  desc: 'Reverse Polish expression tree' },
+  { id: 'preorder', label: 'Preorder', category: 'Traversal', desc: 'Root → Left → Right' },
+  { id: 'inorder', label: 'Inorder', category: 'Traversal', desc: 'Left → Root → Right (sorted)' },
+  { id: 'postorder', label: 'Postorder', category: 'Traversal', desc: 'Left → Right → Root' },
+  { id: 'levelorder', label: 'Level-Order', category: 'Traversal', desc: 'Breadth-First (BFS)' },
+  { id: 'bst-rec', label: 'BST Recursive', category: 'BST Search', desc: 'Recursive divide & conquer' },
+  { id: 'prefix-expr', label: 'Prefix Notation', category: 'Expression', desc: 'Polish prefix expression tree' },
+  { id: 'postfix-expr', label: 'Postfix Notation', category: 'Expression', desc: 'Reverse Polish expression tree' },
 ] as const;
 
 export type TreeAlgoId = typeof TREE_ALGORITHMS[number]['id'];

@@ -15,6 +15,7 @@ import {
   runBSTSearchRecursive,
   buildExpressionTree,
   generateRandomExpr,
+  getPrefixPostfix,
 } from './TreeEngine';
 import type { Tree, TreeStep, TreeAlgoId } from './TreeEngine';
 
@@ -44,6 +45,7 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
   const [targetSide, setTargetSide] = useState<'left' | 'right'>('left');
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [draggingNode, setDraggingNode] = useState<string | null>(null);
+  const [traversalResults, setTraversalResults] = useState<{ prefix: string, postfix: string }>({ prefix: '', postfix: '' });
 
   // ── Persistence ─────────────────────────────────
   useEffect(() => {
@@ -52,7 +54,12 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
 
   useEffect(() => {
     sessionStorage.setItem('tv-active-algo', activeAlgo);
-  }, [activeAlgo]);
+    if (activeAlgo.includes('expr')) {
+      setTraversalResults(getPrefixPostfix(tree));
+    } else {
+      setTraversalResults({ prefix: '', postfix: '' });
+    }
+  }, [activeAlgo, tree]);
 
   const timerRef = useRef<any>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -179,21 +186,82 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
     resetSimulation();
   };
 
-  const handleAddManualNode = () => {
-    const side = targetSide;
-    if (!selectedNode || !inputValue) return;
-    const val = isNaN(parseInt(inputValue)) ? inputValue : parseInt(inputValue);
+  const handleAddManualNode = (side: 'left' | 'right', valOverride?: any) => {
+    if (!selectedNode) return;
+
+    const val = valOverride || (isNaN(parseInt(inputValue)) ? inputValue : parseInt(inputValue)) || '?';
     const newId = `m-${Math.random().toString(36).slice(2, 7)}`;
 
     setTree(prev => {
-      const next = { ...prev };
-      next.nodes[newId] = { id: newId, value: val, left: null, right: null, x: 0, y: 0 };
-      if (side === 'left') next.nodes[selectedNode].left = newId;
-      else next.nodes[selectedNode].right = newId;
-      next.nodes = layoutTree(next.nodes, next.root);
-      return next;
+      // 1. Create a fresh copy of nodes
+      const nextNodes = { ...prev.nodes };
+
+      // 2. Create the new node
+      nextNodes[newId] = {
+        id: newId,
+        value: val,
+        left: null,
+        right: null,
+        x: nextNodes[selectedNode].x + (side === 'left' ? -80 : 80), // Temp pos before layout
+        y: nextNodes[selectedNode].y + 100
+      };
+
+      // 3. Update parent link (immutable)
+      nextNodes[selectedNode] = {
+        ...nextNodes[selectedNode],
+        [side]: newId
+      };
+
+      // 4. Run layout on the NEW nodes object
+      const laidOutNodes = layoutTree(nextNodes, prev.root);
+
+      return {
+        ...prev,
+        nodes: laidOutNodes
+      };
     });
-    setInputValue('');
+
+    if (!valOverride) setInputValue('');
+  };
+
+  const handleDeleteManualNode = () => {
+    if (!selectedNode) {
+      alert("Please select a node to delete");
+      return;
+    }
+
+    setTree(prev => {
+      const nextNodes = JSON.parse(JSON.stringify(prev.nodes));
+
+      // Find parent to remove link
+      const parentId = Object.keys(nextNodes).find(id => nextNodes[id].left === selectedNode || nextNodes[id].right === selectedNode);
+      if (parentId) {
+        if (nextNodes[parentId].left === selectedNode) nextNodes[parentId].left = null;
+        if (nextNodes[parentId].right === selectedNode) nextNodes[parentId].right = null;
+      }
+
+      let newRoot = prev.root;
+      if (prev.root === selectedNode) newRoot = null;
+
+      // Recursive removal of the node and its entire subtree
+      const removeRecursive = (id: string | null) => {
+        if (!id || !nextNodes[id]) return;
+        removeRecursive(nextNodes[id].left);
+        removeRecursive(nextNodes[id].right);
+        delete nextNodes[id];
+      };
+
+      removeRecursive(selectedNode);
+
+      const laidOutNodes = layoutTree(nextNodes, newRoot);
+      return {
+        ...prev,
+        nodes: laidOutNodes,
+        root: newRoot
+      };
+    });
+
+    setSelectedNode(null);
   };
 
   const handleAddRoot = () => {
@@ -305,13 +373,15 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
       let relClass = '';
       if (selectedNode && !isSelected) {
         const sel = tree.nodes[selectedNode];
-        // Parent check
-        if (sel.left === node.id || sel.right === node.id) relClass = 'child';
-        // Children check
-        const parent = Object.values(tree.nodes).find(n => n.left === selectedNode || n.right === selectedNode);
-        if (parent?.id === node.id) relClass = 'parent';
-        // Sibling check
-        if (parent && (parent.left === node.id || parent.right === node.id)) relClass = 'sibling';
+        if (sel) {
+          // Parent check
+          if (sel.left === node.id || sel.right === node.id) relClass = 'child';
+          // Children check
+          const parent = Object.values(tree.nodes).find(n => n.left === selectedNode || n.right === selectedNode);
+          if (parent?.id === node.id) relClass = 'parent';
+          // Sibling check
+          if (parent && (parent.left === node.id || parent.right === node.id)) relClass = 'sibling';
+        }
       }
 
       return (
@@ -319,10 +389,11 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
           key={`node-group-${node.id}`}
           transform={`translate(${node.x}, ${node.y})`}
           onMouseDown={(e) => handleMouseDown(node.id, e)}
+          onClick={(e) => e.stopPropagation()}
           style={{ cursor: draggingNode === node.id ? 'grabbing' : 'grab' }}
         >
           <circle
-            r={22}
+            r={35}
             className={`tree-node-circle tv-node-${state} ${isSelected ? 'selected' : ''} ${relClass}`}
             fill={isSelected ? "rgba(245, 158, 11, 0.15)" : undefined}
           />
@@ -330,36 +401,71 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
             dy=".35em"
             textAnchor="middle"
             className="tv-node-label"
-            style={{ fontWeight: isSelected ? '800' : 'normal' }}
+            style={{ fontWeight: isSelected ? '800' : 'normal', fontSize: '15px' }}
           >
             {node.value}
           </text>
           {(state === 'active' || isSelected || relClass || node.id === tree.root) && (
             <circle
-              r={relClass ? 26 : (node.id === tree.root ? 28 : 30)}
+              r={relClass ? 41 : (node.id === tree.root ? 43 : 45)}
               fill="none"
-              stroke={isSelected ? "#F59E0B" : (node.id === tree.root ? "#3B82F6" : (relClass === 'parent' ? "#EF4444" : relClass === 'child' ? "#10B981" : relClass === 'sibling' ? "#8B5CF6" : "#10B981"))}
+              stroke={isSelected ? "#F59E0B" : (node.id === tree.root ? "#0D9488" : (relClass === 'parent' ? "#EF4444" : relClass === 'child' ? "#10B981" : relClass === 'sibling' ? "#8B5CF6" : "#10B981"))}
               strokeWidth={isSelected || node.id === tree.root ? "4" : "2"}
               className={state === 'active' ? "tv-node-active-pulse" : (isSelected ? "tv-node-selected-glow" : "")}
               opacity={isSelected || node.id === tree.root ? "1" : "0.5"}
             />
           )}
-          {/* Relationship Labels */}
-          {(isSelected || relClass || node.id === tree.root) && (
-            <g transform="translate(0, -35)" className="tv-rel-badge-group">
-              <rect
-                x="-20" y="-10"
-                width="40" height="18"
-                rx="9"
-                className={`tv-rel-badge-bg ${isSelected ? 'sel' : (node.id === tree.root ? 'root' : relClass)}`}
-              />
-              <text
-                textAnchor="middle"
-                dy=".35em"
-                className="tv-rel-badge-text"
-              >
-                {isSelected ? "SEL" : (node.id === tree.root ? "ROOT" : (relClass === 'parent' ? "PRNT" : relClass === 'child' ? "CHLD" : "SBLG"))}
-              </text>
+          {/* Relationship Labels Removed for cleanliness */}
+          {/* Visual Delete Button on Node */}
+          {isSelected && (
+            <g
+              transform="translate(35, -35)"
+              style={{ cursor: 'pointer' }}
+              onClick={(e) => { e.stopPropagation(); handleDeleteManualNode(); }}
+            >
+              <circle r="12" fill="#EF4444" stroke="#fff" strokeWidth="2" />
+              <text textAnchor="middle" dy=".35em" fill="#fff" style={{ fontSize: '14px', fontWeight: 'bold', pointerEvents: 'none' }}>×</text>
+            </g>
+          )}
+          {/* Interactive Ghost & Preview Nodes */}
+          {isSelected && (
+            <g className="tv-builder-controls">
+              {/* Left Slot */}
+              {!node.left && (
+                <g
+                  transform="translate(-80, 100)"
+                  style={{ cursor: 'pointer' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddManualNode('left');
+                  }}
+                >
+                  <circle r="28" fill="rgba(16, 185, 129, 0.05)" stroke="#10B981" strokeDasharray="4 4" strokeWidth="2" />
+                  <g style={{ pointerEvents: 'none' }}>
+                    <text textAnchor="middle" dy="-2" fill="#10B981" style={{ fontSize: '10px', fontWeight: 'bold' }}>ADD</text>
+                    <text textAnchor="middle" dy="12" fill="#10B981" style={{ fontSize: '12px', fontWeight: 'bold' }}>LEFT</text>
+                  </g>
+                  <line x1="40" y1="-60" x2="15" y2="-20" stroke="#10B981" strokeWidth="1.5" strokeDasharray="3 3" />
+                </g>
+              )}
+              {/* Right Slot */}
+              {!node.right && (
+                <g
+                  transform="translate(80, 100)"
+                  style={{ cursor: 'pointer' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddManualNode('right');
+                  }}
+                >
+                  <circle r="28" fill="rgba(16, 185, 129, 0.05)" stroke="#10B981" strokeDasharray="4 4" strokeWidth="2" />
+                  <g style={{ pointerEvents: 'none' }}>
+                    <text textAnchor="middle" dy="-2" fill="#10B981" style={{ fontSize: '10px', fontWeight: 'bold' }}>ADD</text>
+                    <text textAnchor="middle" dy="12" fill="#10B981" style={{ fontSize: '12px', fontWeight: 'bold' }}>RIGHT</text>
+                  </g>
+                  <line x1="-40" y1="-60" x2="-15" y2="-20" stroke="#10B981" strokeWidth="1.5" strokeDasharray="3 3" />
+                </g>
+              )}
             </g>
           )}
         </g>
@@ -416,21 +522,24 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
             <h2 className="tv-section-title">Modify Tree</h2>
             <div className="tv-builder-panel">
               {/* BST / AVL Builder */}
-              {(activeAlgo.includes('bst') || activeAlgo.includes('avl') || activeAlgo.includes('order')) && (
-                <div className="tv-form-group">
-                  <div className="tv-input-row">
-                    <input
-                      type="text"
-                      className="tv-input"
-                      placeholder="Value (Number or Letter)"
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                    />
+              {/* Main Input for all modifications */}
+              <div className="tv-form-group">
+                <div className="tv-input-row">
+                  <input
+                    type="text"
+                    className="tv-input"
+                    placeholder="Value (Node/BST/AVL)"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                  />
+                  {(activeAlgo.includes('bst') || activeAlgo.includes('avl') || activeAlgo.includes('order')) && (
                     <button className="tv-btn" onClick={handleInsertBST}>Insert</button>
-                  </div>
-                  <button className="tv-btn secondary" onClick={handleDeleteBST}>Delete Value</button>
+                  )}
                 </div>
-              )}
+                {(activeAlgo.includes('bst') || activeAlgo.includes('avl') || activeAlgo.includes('order')) && (
+                  <button className="tv-btn secondary" onClick={handleDeleteBST} style={{ marginTop: '8px' }}>Delete BST Value</button>
+                )}
+              </div>
 
 
 
@@ -483,61 +592,53 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
                 </div>
               )}
 
-              <div className="tv-manual-divider">MANUAL EDIT</div>
-              <div className="tv-form-group">
-                {!tree.root && !activeAlgo.includes('trie') ? (
-                  <button className="tv-btn" onClick={handleAddRoot}>Create Root Node</button>
-                ) : (
-                  <>
-                    <div className="tv-edit-hint">
-                      {selectedNode ? `Node ${tree.nodes[selectedNode]?.value || ''} selected` : 'Select a node to add children'}
-                    </div>
-                    <div className="tv-input-row">
-                      <button
-                        className={`tv-btn secondary ${targetSide === 'left' ? 'active' : ''}`}
-                        style={{ flex: 1 }}
-                        onClick={() => setTargetSide('left')}
-                      >
-                        ← Left Side
-                      </button>
-                      <button
-                        className={`tv-btn secondary ${targetSide === 'right' ? 'active' : ''}`}
-                        style={{ flex: 1 }}
-                        onClick={() => setTargetSide('right')}
-                      >
-                        Right Side →
-                      </button>
-                    </div>
-                    <button
-                      className="tv-btn"
-                      onClick={handleAddManualNode}
-                      disabled={!selectedNode || !inputValue}
-                      style={{ width: '100%', marginTop: '8px' }}
-                    >
-                      + Add Node to {targetSide.toUpperCase()}
-                    </button>
-                  </>
-                )}
-                <button className="tv-btn danger-text" onClick={handleClear}>Clear Canvas</button>
-              </div>
             </div>
           </div>
 
-          <div className="tv-section" style={{ marginTop: 'auto', borderBottom: 'none' }}>
+          <div className="tv-section" style={{ borderBottom: 'none', paddingTop: 0 }}>
             <button className="tv-btn" style={{ width: '100%', padding: '12px' }} onClick={handleRun}>
               RUN SIMULATION
             </button>
           </div>
+
+          {/* Expression Info moved here (detailed version) */}
+          {(activeAlgo === 'prefix-expr' || activeAlgo === 'postfix-expr') && (
+            <div className="tv-sidebar-expr-info">
+              <div className="tv-stack-overlay">
+                <div className="tv-stack-title">EXPR STACK</div>
+                <div className="tv-stack-container">
+                  {step?.visitedOrder.map((v, i) => (
+                    <div key={i} className="tv-stack-item">{tree.nodes[v]?.value}</div>
+                  ))}
+                  {(!step || step.visitedOrder.length === 0) && <div className="tv-stack-empty">Empty</div>}
+                </div>
+              </div>
+
+              <div className="tv-notation-results">
+                <div className="tv-notation-item">
+                  <span className="tv-notation-label">PREFIX</span>
+                  <div className="tv-notation-value">{traversalResults.prefix}</div>
+                </div>
+                <div className="tv-notation-item">
+                  <span className="tv-notation-label">POSTFIX</span>
+                  <div className="tv-notation-value">{traversalResults.postfix}</div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Main Canvas ── */}
-        <div className="tv-canvas-area" onClick={() => setSelectedNode(null)}>
+        <div className="tv-canvas-area">
           <svg
-            viewBox="0 0 800 600"
+            viewBox="0 0 1200 1000"
             ref={svgRef}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) setSelectedNode(null);
+            }}
           >
             <defs>
               <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
@@ -545,6 +646,13 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
               </marker>
             </defs>
             <g transform="translate(50, 0)">
+              {!tree.root && !activeAlgo.includes('trie') && (
+                <g transform="translate(600, 300)" style={{ cursor: 'pointer' }} onClick={handleAddRoot}>
+                  <rect x="-110" y="-35" width="220" height="70" rx="35" fill="#0D9488" className="tv-node-active-pulse" />
+                  <text textAnchor="middle" dy=".35em" fill="white" style={{ fontWeight: 'bold', fontSize: '18px', pointerEvents: 'none' }}>+ START BUILDING</text>
+                  <text textAnchor="middle" dy="55" fill="var(--text-secondary)" style={{ fontSize: '13px', fontWeight: '500' }}>Click to create your first node</text>
+                </g>
+              )}
               {renderEdges()}
               {renderNodes()}
             </g>
@@ -557,19 +665,6 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
           {activeAlgo === 'postfix-expr' && (
             <div className="tv-notation-badge postfix">POSTFIX (REVERSE POLISH)</div>
           )}
-
-          {/* Stack Visualization Overlay for Expression Trees */}
-          {(activeAlgo === 'prefix-expr' || activeAlgo === 'postfix-expr') && (
-            <div className="tv-stack-overlay">
-              <div className="tv-stack-title">EXPR STACK</div>
-              <div className="tv-stack-container">
-                {step?.visitedOrder.map((v, i) => (
-                  <div key={i} className="tv-stack-item">{tree.nodes[v]?.value}</div>
-                ))}
-                {(!step || step.visitedOrder.length === 0) && <div className="tv-stack-empty">Empty</div>}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* ── Right Panel: Log & Playback ── */}
@@ -578,8 +673,51 @@ const TreeVisualizer: React.FC<Props> = ({ onBack }) => {
             <h2 className="tv-section-title">Debug Log</h2>
             <div className="tv-log">
               {steps.slice(0, currentStep + 1).map((s, i) => (
-                <div key={i} className={`tv-log-entry ${i === currentStep ? 'active' : ''}`}>
-                  {s.message}
+                <div key={i} className={`tv-log-entry ${i === currentStep ? 'active' : ''} ${s.message.includes('SUCCESS') || s.message.includes('FOUND') ? 'success' : s.message.includes('ERROR') ? 'error' : ''}`}>
+                  {s.message.includes('complete') || s.message.includes('FOUND') ? (
+                    <div className="tv-completion-box">
+                      <div className="tv-completion-header">
+                        {s.message.includes('FOUND') ? (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2.5">
+                            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                          </svg>
+                        ) : (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        )}
+                        <span style={{ marginLeft: '6px' }}>{s.message.split(':')[0].replace('SUCCESS', '').replace('FOUND', '').trim()}</span>
+                      </div>
+                      <div className="tv-result-path">
+                        {s.visitedOrder.map((nodeId, idx) => (
+                          <React.Fragment key={nodeId}>
+                            <div className="tv-path-node" style={{ animationDelay: `${idx * 0.05}s` }}>
+                              {tree.nodes[nodeId]?.value}
+                            </div>
+                            {idx < s.visitedOrder.length - 1 && (
+                              <span className="tv-path-arrow">→</span>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                      {(s.message.includes('=') || s.message.includes('result:')) && (
+                        <div className="tv-eval-result">
+                          Result: <span className="tv-result-val">
+                            {s.message.split('=').pop()?.split('result:').pop()?.trim()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="tv-log-text">
+                      {s.message.includes('ERROR') && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="3" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+                          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                      )}
+                      {s.message.replace('ERROR:', '').replace('SUCCESS:', '').replace('FOUND:', '').trim()}
+                    </div>
+                  )}
                 </div>
               ))}
               {steps.length === 0 && <div className="tv-log-entry">Select an algorithm and click RUN to begin.</div>}
